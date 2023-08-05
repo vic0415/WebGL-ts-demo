@@ -1,0 +1,23 @@
+{
+  "name": "webglts",
+  "version": "1.0.0",
+  "description": "",
+  "main": "main.js",
+  "scripts": {
+    "build": "node browserify.js > dist/bundle.js",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "browserify-shim": {},
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "@types/node": "^8.0.28",
+    "@types/pixi.js": "^4.8.0",
+    "browserify": "^16.2.2",
+    "browserify-shim": "^3.8.14",
+    "gl-matrix": "^3.4.3",
+    "lil-gui": "^0.18.2",
+    "tsify": "^4.0.0",
+    "tslint": "^5.11.0"
+  }
+}
