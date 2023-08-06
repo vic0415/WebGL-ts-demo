@@ -1,2 +1,2 @@
 tsc
-npm run build
+node browserify.js > dist/bundle.js

@@ -38,9 +38,9 @@ class Shader {
         var _a;
         (_a = this.gl) === null || _a === void 0 ? void 0 : _a.useProgram(this.program);
     }
-    setUniform3f(paranNameString, x, y, z) {
+    setUniform3f(paranNameString, param) {
         var _a, _b;
-        (_a = this.gl) === null || _a === void 0 ? void 0 : _a.uniform3f((_b = this.gl) === null || _b === void 0 ? void 0 : _b.getUniformLocation(this.program, paranNameString), x, y, z);
+        (_a = this.gl) === null || _a === void 0 ? void 0 : _a.uniform3f((_b = this.gl) === null || _b === void 0 ? void 0 : _b.getUniformLocation(this.program, paranNameString), param[0], param[1], param[2]);
     }
     setUniform1f(paranNameString, param) {
         var _a;

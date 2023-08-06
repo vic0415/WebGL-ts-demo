@@ -4,6 +4,7 @@ import * as GMath from './Math';
 import GUI from 'lil-gui'; 
 import { Transform } from './Transform';
 import { vec3, mat4, quat, glMatrix} from "gl-matrix";
+import { Material } from './Material';
 
 const main = () => {
 
@@ -65,10 +66,6 @@ var PHI = 0;
   
     gl.enable(gl.DEPTH_TEST);
     //gl.enable(gl.CULL_FACE);
-
-    const myShader = new Shader(gl, vertexShaderSource, fragmentShaderSource);
-
-    myShader.use();
   
     const vertices = [
       
@@ -128,32 +125,37 @@ var PHI = 0;
       1, 2, 3  
   ];
 
-    var isImageLoaded = false;
+  const myShader = new Shader(gl, vertexShaderSource, fragmentShaderSource);
+  myShader.use();
 
-    var texture = gl.createTexture();
+  var isImageLoaded = false;
 
-    if(texture != null){
+  var texture = gl.createTexture();
 
-      loadTexture(gl, texture, gl.getUniformLocation(myShader.program, "texture1"), image, 0);
-    }     
+  if(texture != null){
+
+    loadTexture(gl, texture, gl.getUniformLocation(myShader.program, "texture1"), image, 0);
+  }     
 
 
-    // Vertext buffer
-    const positionBuffer = gl.createBuffer();
-    gl.bindBuffer(gl.ARRAY_BUFFER, positionBuffer);
+  const myMaterial = new Material(myShader, vec3.fromValues(1.0, 1.0, 1.0), vec3.fromValues(1.0, 1.0, 1.0), vec3.fromValues(0.1, 0.1, 0.1), 8.0);
 
-    var vertexPosTypedArray = new Float32Array(vertices);
+  // Vertext buffer
+  const positionBuffer = gl.createBuffer();
+  gl.bindBuffer(gl.ARRAY_BUFFER, positionBuffer);
 
-    gl.bufferData(gl.ARRAY_BUFFER, vertexPosTypedArray, gl.STATIC_DRAW);
+  var vertexPosTypedArray = new Float32Array(vertices);
+
+  gl.bufferData(gl.ARRAY_BUFFER, vertexPosTypedArray, gl.STATIC_DRAW);
+
+  gl.vertexAttribPointer(gl.getAttribLocation(myShader.program, 'aPos'), 3, gl.FLOAT, false, vertexPosTypedArray.BYTES_PER_ELEMENT * 8, 0);
+  gl.enableVertexAttribArray(0);
   
-    gl.vertexAttribPointer(gl.getAttribLocation(myShader.program, 'aPos'), 3, gl.FLOAT, false, vertexPosTypedArray.BYTES_PER_ELEMENT * 8, 0);
-    gl.enableVertexAttribArray(0);
-    
-    gl.vertexAttribPointer(gl.getAttribLocation(myShader.program, 'aTexCoord'), 2, gl.FLOAT, false, vertexPosTypedArray.BYTES_PER_ELEMENT * 8, vertexPosTypedArray.BYTES_PER_ELEMENT * 3);
-gl.enableVertexAttribArray(2);
+  gl.vertexAttribPointer(gl.getAttribLocation(myShader.program, 'aTexCoord'), 2, gl.FLOAT, false, vertexPosTypedArray.BYTES_PER_ELEMENT * 8, vertexPosTypedArray.BYTES_PER_ELEMENT * 3);
+  gl.enableVertexAttribArray(2);
 
-    gl.vertexAttribPointer(gl.getAttribLocation(myShader.program, 'aNormal'), 3, gl.FLOAT, false, vertexPosTypedArray.BYTES_PER_ELEMENT * 8, vertexPosTypedArray.BYTES_PER_ELEMENT * 5);
-    gl.enableVertexAttribArray(1);
+  gl.vertexAttribPointer(gl.getAttribLocation(myShader.program, 'aNormal'), 3, gl.FLOAT, false, vertexPosTypedArray.BYTES_PER_ELEMENT * 8, vertexPosTypedArray.BYTES_PER_ELEMENT * 5);
+  gl.enableVertexAttribArray(1);
 /*
 gl.vertexAttribPointer(gl.getAttribLocation(myShader.program, 'aPos'), 3, gl.FLOAT, false, vertexPosTypedArray.BYTES_PER_ELEMENT * 8, 0);
 gl.enableVertexAttribArray(0);
@@ -180,7 +182,7 @@ gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, indicesTypedArray, gl.STATIC_DRAW);
   //projMat.setPerspective(60, 800.0/800.0, 0.001, 100.0);
 
 
-    const camera = new Camera(vec3.fromValues(0, 0.5, 3.0), 0, 3.14, vec3.set(vec3.create(), 0, 1, 0));
+    const camera = new Camera(vec3.fromValues(0, 0.5, 3.0), 0, 3.14, vec3.fromValues(0, 1, 0));
 
     let trans = mat4.create();
     let viewMat = mat4.create();
@@ -251,16 +253,15 @@ gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, indicesTypedArray, gl.STATIC_DRAW);
       gl.uniformMatrix4fv(gl.getUniformLocation(myShader.program, "viewMat"), false, viewMat);
       gl.uniformMatrix4fv(gl.getUniformLocation(myShader.program, "projMat"), false, projMat);
       gl.uniform3f(gl.getUniformLocation(myShader.program, "objColor"), 1.0, 0.5, 0.31);
-      gl.uniform3f(gl.getUniformLocation(myShader.program, "ambientColor"), 0.2, 0.1, 0.0);
+      gl.uniform3f(gl.getUniformLocation(myShader.program, "ambientColor"), 1.0, 1.0, 1.0);
       gl.uniform3f(gl.getUniformLocation(myShader.program, "lightPos"), 8, 10, 0);
       gl.uniform3f(gl.getUniformLocation(myShader.program, "lightColor"), 1.0, 1.0, 1.0);
       gl.uniform3f(gl.getUniformLocation(myShader.program, "CameraPos"), camera.Position[0], camera.Position[1], camera.Position[2]);
 
-
-      gl.uniform3f(gl.getUniformLocation(myShader.program, "material.ambient"), 1.0, 1.0, 1.0);
-      gl.uniform3f(gl.getUniformLocation(myShader.program, "material.diffuse"), 1.0, 1.0, 1.0);
-      gl.uniform3f(gl.getUniformLocation(myShader.program, "material.specular"), 1.0, 1.0, 1.0);
-      gl.uniform1f(gl.getUniformLocation(myShader.program, "material.shininess"), 8.0);
+      myShader.setUniform3f("material.ambient", myMaterial.ambient);
+      myShader.setUniform3f("material.diffuse", myMaterial.diffuse);
+      myShader.setUniform3f("material.specular", myMaterial.specular);
+      myShader.setUniform1f("material.shininess", myMaterial.shininess);
 
       gl.drawArrays(gl.TRIANGLES, 0, 36);
 
@@ -272,6 +273,10 @@ gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, indicesTypedArray, gl.STATIC_DRAW);
 
 
     tick();
+    const gui = new GUI();
+
+    const materialGroup = gui.addFolder( 'Material' );
+    materialGroup.add( myMaterial, 'shininess', 1, 64 );
 /*
     const gui = new GUI();
     gui.add( transform.rotate, 'x', -360, 360 ); 	// checkbox

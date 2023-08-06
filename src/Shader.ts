@@ -1,3 +1,5 @@
+import { vec3 } from "gl-matrix";
+
 export class Shader{
     gl: WebGL2RenderingContext| null= null;
     program: WebGLProgram;
@@ -53,8 +55,8 @@ export class Shader{
         this.gl?.useProgram(this.program);
     }
 
-    setUniform3f(paranNameString: string, x: number, y: number, z: number){
-        this.gl?.uniform3f(this.gl?.getUniformLocation(this.program, paranNameString), x, y, z);
+    setUniform3f(paranNameString: string, param: vec3){
+        this.gl?.uniform3f(this.gl?.getUniformLocation(this.program, paranNameString), param[0], param[1], param[2]);
     }
     
     setUniform1f(paranNameString: string, param: number){
