@@ -46,5 +46,9 @@ class Shader {
         var _a;
         (_a = this.gl) === null || _a === void 0 ? void 0 : _a.uniform1f(this.gl.getUniformLocation(this.program, paranNameString), param);
     }
+    SetUniform1i(paranNameString, slot) {
+        var _a;
+        (_a = this.gl) === null || _a === void 0 ? void 0 : _a.uniform1i(this.gl.getUniformLocation(this.program, paranNameString), slot);
+    }
 }
 exports.Shader = Shader;

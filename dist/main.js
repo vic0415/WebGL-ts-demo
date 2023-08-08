@@ -116,11 +116,7 @@ const main = () => {
     const myShader = new Shader_1.Shader(gl, vertexShaderSource, fragmentShaderSource);
     myShader.use();
     var isImageLoaded = false;
-    var texture = gl.createTexture();
-    if (texture != null) {
-        loadTexture(gl, texture, gl.getUniformLocation(myShader.program, "texture1"), image, 0);
-    }
-    const myMaterial = new Material_1.Material(myShader, gl_matrix_1.vec3.fromValues(1.0, 1.0, 1.0), gl_matrix_1.vec3.fromValues(1.0, 1.0, 1.0), gl_matrix_1.vec3.fromValues(0.1, 0.1, 0.1), 8.0);
+    const myMaterial = new Material_1.Material(myShader, loadTextureToGPU(gl, gl.getUniformLocation(myShader.program, "material.diffuse"), diffuseImage, 0), loadTextureToGPU(gl, gl.getUniformLocation(myShader.program, "material.specular"), specularImage, 1), gl_matrix_1.vec3.fromValues(1.0, 1.0, 1.0), 8.0);
     // Vertext buffer
     const positionBuffer = gl.createBuffer();
     gl.bindBuffer(gl.ARRAY_BUFFER, positionBuffer);
@@ -169,6 +165,9 @@ const main = () => {
     var q = gl_matrix_1.quat.create();
     var newrot = gl_matrix_1.mat4.create();
     var model = gl_matrix_1.mat4.create();
+    let initRotQuat = gl_matrix_1.quat.create();
+    gl_matrix_1.quat.fromEuler(initRotQuat, 45, 45, 0);
+    gl_matrix_1.mat4.fromQuat(model, initRotQuat);
     // 1. perspective matrix
     gl_matrix_1.mat4.perspective(pvm, 60, 800.0 / 800.0, 0.001, 100.0);
     // 2. view matrix
@@ -208,15 +207,15 @@ const main = () => {
         gl.uniformMatrix4fv(gl.getUniformLocation(myShader.program, "modelMat"), false, model);
         gl.uniformMatrix4fv(gl.getUniformLocation(myShader.program, "viewMat"), false, viewMat);
         gl.uniformMatrix4fv(gl.getUniformLocation(myShader.program, "projMat"), false, projMat);
-        gl.uniform3f(gl.getUniformLocation(myShader.program, "objColor"), 1.0, 0.5, 0.31);
-        gl.uniform3f(gl.getUniformLocation(myShader.program, "ambientColor"), 1.0, 1.0, 1.0);
+        gl.uniform3f(gl.getUniformLocation(myShader.program, "objColor"), 1.0, 1.0, 1.0);
+        gl.uniform3f(gl.getUniformLocation(myShader.program, "ambientColor"), 0.2, 0.2, 0.2);
         gl.uniform3f(gl.getUniformLocation(myShader.program, "lightPos"), 8, 10, 0);
         gl.uniform3f(gl.getUniformLocation(myShader.program, "lightColor"), 1.0, 1.0, 1.0);
         gl.uniform3f(gl.getUniformLocation(myShader.program, "CameraPos"), camera.Position[0], camera.Position[1], camera.Position[2]);
-        myShader.setUniform3f("material.ambient", myMaterial.ambient);
-        myShader.setUniform3f("material.diffuse", myMaterial.diffuse);
-        myShader.setUniform3f("material.specular", myMaterial.specular);
-        myShader.setUniform1f("material.shininess", myMaterial.shininess);
+        myMaterial.shader.setUniform3f("material.ambient", myMaterial.ambient);
+        myMaterial.shader.SetUniform1i("material.diffuse", 0);
+        myMaterial.shader.SetUniform1i("material.specular", 1);
+        myMaterial.shader.setUniform1f("material.shininess", myMaterial.shininess);
         gl.drawArrays(gl.TRIANGLES, 0, 36);
         //gl.drawArrays(gl.TRIANGLES, 0, 6);
         requestAnimationFrame(tick);
@@ -241,26 +240,32 @@ function loadShaderFile(filename) {
         return yield response.text();
     });
 }
-function initShaders() {
+const loadImage = (url, image) => new Promise((resolve, reject) => {
+    image.addEventListener('load', () => resolve(image));
+    image.addEventListener('error', (err) => reject(err));
+    image.src = url;
+});
+function LoadResources() {
     return __awaiter(this, void 0, void 0, function* () {
         vertexShaderSource = yield loadShaderFile("vertexShader.glsl");
         fragmentShaderSource = yield loadShaderFile("fragmentShader.glsl");
         console.log("Vertex Shader:", vertexShaderSource);
         console.log("Fragment Shader:", fragmentShaderSource);
-        if (!image) {
-            console.log('Failed to create the image object');
-            return false;
-        }
-        image.onload = function () {
-            main();
-        };
-        image.src = './awesomeface.png';
+        loadImage("./image/container2.png", diffuseImage).then(img => {
+            loadImage("./image/container2_specular.png", specularImage).then(img => {
+                main();
+            })
+                .catch(err => console.error(err));
+        })
+            .catch(err => console.error(err));
     });
 }
 var vertexShaderSource = "";
 var fragmentShaderSource = "";
-var image = new Image(); // Create the image object
-function loadTexture(gl, texture, u_Sampler, image, texUnit) {
+var diffuseImage = new Image();
+var specularImage = new Image();
+function loadTextureToGPU(gl, u_Sampler, image, texUnit) {
+    var texture = gl.createTexture();
     gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, 1); // Flip the image's y axis
     gl.activeTexture(gl.TEXTURE0 + texUnit);
     // Bind the texture object to the target
@@ -270,7 +275,8 @@ function loadTexture(gl, texture, u_Sampler, image, texUnit) {
     // Set the texture image
     gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGB, gl.RGB, gl.UNSIGNED_BYTE, image);
     // Set the texture unit 0 to the sampler
-    gl.uniform1i(u_Sampler, texUnit);
+    //gl.uniform1i(u_Sampler, texUnit);
     gl.generateMipmap(gl.TEXTURE_2D);
+    return texture;
 }
-window.onload = initShaders;
+window.onload = LoadResources;

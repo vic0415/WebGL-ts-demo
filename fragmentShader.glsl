@@ -7,8 +7,8 @@ in vec2 TexCoord;
 
 struct Material {
     vec3 ambient;
-    vec3 diffuse;
-    vec3 specular;
+    sampler2D diffuse;
+    sampler2D specular;
     float shininess;
 }; 
 
@@ -20,7 +20,6 @@ uniform vec3 ambientColor;
 uniform vec3 lightPos;
 uniform vec3 lightColor;
 uniform vec3 CameraPos;
-uniform sampler2D texture1;
 
 out vec4 FragColor;
 
@@ -46,7 +45,7 @@ void main() {
     //float specularAmount = pow(max(dot(reflectVec, CameraVec), 0), material.shininess);
     //float specularAmount = 1.0;
 
-    vec3 specular = material.specular * specularAmount * lightColor;
+    vec3 specular = texture(material.specular, TexCoord).rgb * specularAmount * lightColor;
 
     //
     float diffuseDot = dot(lightDir, Normal);
@@ -54,14 +53,14 @@ void main() {
         diffuseDot = 0.0;
     }
 
-    vec3 diffuse = material.diffuse * diffuseDot * lightColor;
+    vec3 diffuse = texture(material.diffuse, TexCoord).rgb * diffuseDot * lightColor;
 
   
     //vec3 diffuse = material.diffuse * max(dot(lightDir, Normal), 0) * lightColor;
     //vec3 diffuse = material.diffuse * 1.0 * lightColor;
 
-    vec3 ambient = material.ambient * ambientColor;
-    FragColor = vec4((ambient + diffuse + specular) , 1.0) * texture(texture1, TexCoord);
+    vec3 ambient = texture(material.diffuse, TexCoord).rgb * ambientColor;
+    FragColor = vec4((ambient + diffuse + specular) * objColor, 1.0);
 
     //FragColor = vec4(objColor, 1.0);
 

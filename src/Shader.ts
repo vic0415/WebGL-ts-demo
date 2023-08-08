@@ -63,4 +63,8 @@ export class Shader{
         this.gl?.uniform1f(this.gl.getUniformLocation(this.program, paranNameString), param);
     }
 
+    SetUniform1i(paranNameString: string, slot: number){
+        this.gl?.uniform1i(this.gl.getUniformLocation(this.program, paranNameString), slot);
+  }
+
 }
