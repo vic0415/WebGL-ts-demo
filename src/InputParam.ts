@@ -3,7 +3,7 @@ import { Material } from './Material';
 import { LightDirectional } from "./LightDirectional";
 
 export class InputParam{
-    public MaterialShininess: number = 1;
+    public MaterialShininess: number = 4;
     public MaterialDiffuseStrength: number = 1;
     public MaterialSpecularStrength: number = 1;
     public LightDirectionX: number = 1;

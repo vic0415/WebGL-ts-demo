@@ -4,7 +4,7 @@ exports.InputParam = void 0;
 const gl_matrix_1 = require("gl-matrix");
 class InputParam {
     constructor() {
-        this.MaterialShininess = 1;
+        this.MaterialShininess = 4;
         this.MaterialDiffuseStrength = 1;
         this.MaterialSpecularStrength = 1;
         this.LightDirectionX = 1;

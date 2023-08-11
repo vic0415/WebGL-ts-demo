@@ -15,6 +15,9 @@ const main = () => {
     if (!(canvas instanceof HTMLCanvasElement)) {
       throw new Error('No html canvas element.');
     }
+
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight;
   
     const gl = canvas.getContext('webgl2');
   
@@ -190,15 +193,10 @@ gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, indicesTypedArray, gl.STATIC_DRAW);
   
     //modelMat = glm::rotate(modelMat, glm::radians(-45.0f), glm::vec3(0.0f, 0.0f, 1.0f));
     //viewMat = glm::translate(viewMat, glm::vec3(0.0f, 0.0f, -3.0f));
-    mat4.perspective(projMat, Math.PI/3, 800.0/800.0, 0.001, 100.0);
+    mat4.perspective(projMat, Math.PI/3, window.innerWidth/window.innerHeight, 0.001, 100.0);
 
     viewMat = camera.GetViewMatrix();
 
-    var eye = vec3.fromValues(0, 0.5, 1.0);
-    var target = vec3.fromValues(0, 0, 0);
-    var up = vec3.fromValues(0, 1, 0);
-    var vm = mat4.create();
-    var pvm = mat4.create();
     var q = quat.create();
     var newrot = mat4.create();
     var model = mat4.create();
@@ -207,18 +205,12 @@ gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, indicesTypedArray, gl.STATIC_DRAW);
     quat.fromEuler(initRotQuat, 45, 45, 0);
     mat4.fromQuat(model, initRotQuat);
 
-
-    // 1. perspective matrix
-    mat4.perspective(pvm, 60, 800.0/800.0, 0.001, 100.0);
-    // 2. view matrix
-    mat4.lookAt(vm, eye, target, up);
-    mat4.multiply(pvm, pvm, vm);
-
-
     const inputParam = new InputParam();
     
     var tick = function()
     {
+      gl.viewport(0, 0, gl.canvas.width, gl.canvas.height);
+
       gl.clearColor(0, 0, 0, 1.0);
 
       gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
@@ -251,9 +243,6 @@ gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, indicesTypedArray, gl.STATIC_DRAW);
 
       mat4.fromQuat(newrot, q);
       mat4.multiply(model, newrot, model);
-  
-      var final = mat4.create();
-      mat4.multiply(final, pvm, model);
 
       inputParam.update(myMaterial, light);
 
@@ -269,9 +258,11 @@ gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, indicesTypedArray, gl.STATIC_DRAW);
       gl.uniform3f(gl.getUniformLocation(myShader.program, "CameraPos"), camera.Position[0], camera.Position[1], camera.Position[2]);
 
       myMaterial.shader.setUniform3f("material.ambient", myMaterial.ambient);
-      myMaterial.shader.SetUniform1i("material.diffuse", 0);
-      myMaterial.shader.SetUniform1i("material.specular", 1);
+      myMaterial.shader.setUniform1i("material.diffuse", 0);
+      myMaterial.shader.setUniform1i("material.specular", 1);
       myMaterial.shader.setUniform1f("material.shininess", myMaterial.shininess);
+      myMaterial.shader.setUniform1f("material.diffuseStrength", inputParam.MaterialDiffuseStrength);
+      myMaterial.shader.setUniform1f("material.specularStrength", inputParam.MaterialSpecularStrength);
 
       gl.drawArrays(gl.TRIANGLES, 0, 36);
 
@@ -281,12 +272,14 @@ gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, indicesTypedArray, gl.STATIC_DRAW);
     };
 
 
-
     tick();
     const gui = new GUI();
 
     const materialGroup = gui.addFolder( 'Material' );
     materialGroup.add( inputParam, 'MaterialShininess', 1, 64 ).name( 'shininess' );
+    materialGroup.add( inputParam, 'MaterialDiffuseStrength', 0, 1 ).name( 'MaterialDiffuseStrength' );
+    materialGroup.add( inputParam, 'MaterialSpecularStrength', 0, 1 ).name( 'MaterialSpecularStrength' );
+
     /*
     const lightGroup = gui.addFolder( 'Light' );
     lightGroup.add( light, 'shininess', 1, 64 );
@@ -297,6 +290,13 @@ gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, indicesTypedArray, gl.STATIC_DRAW);
     gui.add( transform.rotate, 'y', -360, 360 ); 	// checkbox
     gui.add( transform.rotate, 'z', -360, 360 ); 	// checkbox
 */
+
+    window.onresize = () => {
+      canvas.width = window.innerWidth;
+      canvas.height = window.innerHeight;
+      mat4.perspective(projMat, Math.PI/3, canvas.width/canvas.height, 0.001, 100.0);
+    }
+
   }
 
 async function loadShaderFile(filename: string): Promise<string> {

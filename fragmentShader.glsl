@@ -10,6 +10,8 @@ struct Material {
     sampler2D diffuse;
     sampler2D specular;
     float shininess;
+    float diffuseStrength;
+    float specularStrength;
 }; 
 
 uniform Material material;
@@ -17,14 +19,13 @@ uniform Material material;
 //uniform sampler2D ourFace;
 uniform vec3 objColor;
 uniform vec3 ambientColor;
-uniform vec3 lightPos;
+//uniform vec3 lightPos;
 uniform vec3 lightDir;
 
 uniform vec3 lightColor;
 uniform vec3 CameraPos;
 
 out vec4 FragColor;
-
 
 // texture samplers
 
@@ -48,7 +49,7 @@ void main() {
     //float specularAmount = pow(max(dot(reflectVec, CameraVec), 0), material.shininess);
     //float specularAmount = 1.0;
 
-    vec3 specular = texture(material.specular, TexCoord).rgb * specularAmount * lightColor;
+    vec3 specular = texture(material.specular, TexCoord).rgb * specularAmount * lightColor * material.specularStrength;
 
     //
     float diffuseDot = dot(lightDirN, Normal);
@@ -56,13 +57,13 @@ void main() {
         diffuseDot = 0.0;
     }
 
-    vec3 diffuse = texture(material.diffuse, TexCoord).rgb * diffuseDot * lightColor;
+    vec3 diffuse = texture(material.diffuse, TexCoord).rgb * diffuseDot * lightColor * material.diffuseStrength;
 
   
     //vec3 diffuse = material.diffuse * max(dot(lightDir, Normal), 0) * lightColor;
     //vec3 diffuse = material.diffuse * 1.0 * lightColor;
 
-    vec3 ambient = texture(material.diffuse, TexCoord).rgb * ambientColor;
+    vec3 ambient = texture(material.diffuse, TexCoord).rgb * ambientColor * material.diffuseStrength;
     FragColor = vec4((ambient + diffuse + specular) * objColor, 1.0);
 
     //FragColor = vec4(objColor, 1.0);
