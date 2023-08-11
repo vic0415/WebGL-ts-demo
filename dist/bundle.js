@@ -10638,6 +10638,53 @@ exports.Camera = Camera;
 },{"gl-matrix":2}],14:[function(require,module,exports){
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
+exports.InputParam = void 0;
+const gl_matrix_1 = require("gl-matrix");
+class InputParam {
+    constructor() {
+        this.MaterialShininess = 1;
+        this.MaterialDiffuseStrength = 1;
+        this.MaterialSpecularStrength = 1;
+        this.LightDirectionX = 1;
+        this.LightDirectionY = 1;
+        this.whiteColor = gl_matrix_1.vec3.fromValues(1.0, 1.0, 1.0);
+    }
+    update(material, light) {
+        material.shininess = this.MaterialShininess;
+    }
+}
+exports.InputParam = InputParam;
+
+},{"gl-matrix":2}],15:[function(require,module,exports){
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.LightDirectional = void 0;
+const gl_matrix_1 = require("gl-matrix");
+class LightDirectional {
+    constructor(_position, _angle, _color) {
+        this.position = gl_matrix_1.vec3.set(gl_matrix_1.vec3.create(), 0, 0, 0);
+        this.angle = gl_matrix_1.vec3.set(gl_matrix_1.vec3.create(), 0, 0, 0);
+        this.color = gl_matrix_1.vec3.set(gl_matrix_1.vec3.create(), 0, 0, 0);
+        this.direction = gl_matrix_1.vec3.set(gl_matrix_1.vec3.create(), 0, 0, 0);
+        this.WorldUp = gl_matrix_1.vec3.set(gl_matrix_1.vec3.create(), 0, 0, 0);
+        this.position = _position;
+        this.angle = _angle;
+        this.color = _color;
+        this.updateDirection();
+    }
+    updateDirection() {
+        this.direction = gl_matrix_1.vec3.set(gl_matrix_1.vec3.create(), 0, 0, 1.0);
+        this.direction = gl_matrix_1.vec3.rotateZ(this.direction, this.position, this.direction, this.angle[2]);
+        this.direction = gl_matrix_1.vec3.rotateX(this.direction, this.position, this.direction, this.angle[0]);
+        this.direction = gl_matrix_1.vec3.rotateY(this.direction, this.position, this.direction, this.angle[1]);
+        //this.direction = vec3.mul(this.direction, this.direction, vec3.fromValues(-1.0, -1.0, -1.0));
+    }
+}
+exports.LightDirectional = LightDirectional;
+
+},{"gl-matrix":2}],16:[function(require,module,exports){
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
 exports.Material = void 0;
 class Material {
     constructor(shader, diffuse, specular, ambient, shininess) {
@@ -10650,7 +10697,7 @@ class Material {
 }
 exports.Material = Material;
 
-},{}],15:[function(require,module,exports){
+},{}],17:[function(require,module,exports){
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.rotate = exports.lookAt = exports.normalize = exports.cross = exports.Matrix4 = exports.Vector3 = void 0;
@@ -11017,7 +11064,7 @@ function rotate(angle, x, y, z) {
 }
 exports.rotate = rotate;
 
-},{}],16:[function(require,module,exports){
+},{}],18:[function(require,module,exports){
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.Shader = void 0;
@@ -11073,7 +11120,7 @@ class Shader {
 }
 exports.Shader = Shader;
 
-},{}],17:[function(require,module,exports){
+},{}],19:[function(require,module,exports){
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.Transform = void 0;
@@ -11086,7 +11133,7 @@ class Transform {
 }
 exports.Transform = Transform;
 
-},{"./Math":15}],18:[function(require,module,exports){
+},{"./Math":17}],20:[function(require,module,exports){
 "use strict";
 var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
     function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
@@ -11103,17 +11150,17 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 Object.defineProperty(exports, "__esModule", { value: true });
 const Shader_1 = require("./Shader");
 const Camera_1 = require("./Camera");
+const LightDirectional_1 = require("./LightDirectional");
 const lil_gui_1 = __importDefault(require("lil-gui"));
 const Transform_1 = require("./Transform");
 const gl_matrix_1 = require("gl-matrix");
 const Material_1 = require("./Material");
+const InputParam_1 = require("./InputParam");
 const main = () => {
-    // Find the canvas element
     const canvas = document.getElementById('webgl');
     if (!(canvas instanceof HTMLCanvasElement)) {
         throw new Error('No html canvas element.');
     }
-    // WebGL rendering context
     const gl = canvas.getContext('webgl2');
     if (!gl) {
         throw new Error('Unable to initialize WebGL.');
@@ -11237,6 +11284,7 @@ const main = () => {
     //let projMat = new GMath.Matrix4();
     //modelMat.translate(0.5, 0, 0);
     //projMat.setPerspective(60, 800.0/800.0, 0.001, 100.0);
+    const light = new LightDirectional_1.LightDirectional(gl_matrix_1.vec3.fromValues(8, 10, 0), gl_matrix_1.vec3.fromValues(0, 0, 0), gl_matrix_1.vec3.fromValues(1.0, 1.0, 1.0));
     const camera = new Camera_1.Camera(gl_matrix_1.vec3.fromValues(0, 0.5, 3.0), 0, 3.14, gl_matrix_1.vec3.fromValues(0, 1, 0));
     let trans = gl_matrix_1.mat4.create();
     let viewMat = gl_matrix_1.mat4.create();
@@ -11262,6 +11310,7 @@ const main = () => {
     // 2. view matrix
     gl_matrix_1.mat4.lookAt(vm, eye, target, up);
     gl_matrix_1.mat4.multiply(pvm, pvm, vm);
+    const inputParam = new InputParam_1.InputParam();
     var tick = function () {
         gl.clearColor(0, 0, 0, 1.0);
         gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
@@ -11293,13 +11342,15 @@ const main = () => {
         gl_matrix_1.mat4.multiply(model, newrot, model);
         var final = gl_matrix_1.mat4.create();
         gl_matrix_1.mat4.multiply(final, pvm, model);
+        inputParam.update(myMaterial, light);
         gl.uniformMatrix4fv(gl.getUniformLocation(myShader.program, "modelMat"), false, model);
         gl.uniformMatrix4fv(gl.getUniformLocation(myShader.program, "viewMat"), false, viewMat);
         gl.uniformMatrix4fv(gl.getUniformLocation(myShader.program, "projMat"), false, projMat);
         gl.uniform3f(gl.getUniformLocation(myShader.program, "objColor"), 1.0, 1.0, 1.0);
         gl.uniform3f(gl.getUniformLocation(myShader.program, "ambientColor"), 0.2, 0.2, 0.2);
         gl.uniform3f(gl.getUniformLocation(myShader.program, "lightPos"), 8, 10, 0);
-        gl.uniform3f(gl.getUniformLocation(myShader.program, "lightColor"), 1.0, 1.0, 1.0);
+        gl.uniform3f(gl.getUniformLocation(myShader.program, "lightColor"), light.color[0], light.color[1], light.color[2]);
+        gl.uniform3f(gl.getUniformLocation(myShader.program, "lightDir"), light.direction[0], light.direction[1], light.direction[2]);
         gl.uniform3f(gl.getUniformLocation(myShader.program, "CameraPos"), camera.Position[0], camera.Position[1], camera.Position[2]);
         myMaterial.shader.setUniform3f("material.ambient", myMaterial.ambient);
         myMaterial.shader.SetUniform1i("material.diffuse", 0);
@@ -11312,7 +11363,11 @@ const main = () => {
     tick();
     const gui = new lil_gui_1.default();
     const materialGroup = gui.addFolder('Material');
-    materialGroup.add(myMaterial, 'shininess', 1, 64);
+    materialGroup.add(inputParam, 'MaterialShininess', 1, 64).name('shininess');
+    /*
+    const lightGroup = gui.addFolder( 'Light' );
+    lightGroup.add( light, 'shininess', 1, 64 );
+    */
     /*
         const gui = new GUI();
         gui.add( transform.rotate, 'x', -360, 360 ); 	// checkbox
@@ -11370,4 +11425,4 @@ function loadTextureToGPU(gl, u_Sampler, image, texUnit) {
 }
 window.onload = LoadResources;
 
-},{"./Camera":13,"./Material":14,"./Shader":16,"./Transform":17,"gl-matrix":2,"lil-gui":12}]},{},[18]);
+},{"./Camera":13,"./InputParam":14,"./LightDirectional":15,"./Material":16,"./Shader":18,"./Transform":19,"gl-matrix":2,"lil-gui":12}]},{},[20]);

@@ -18,6 +18,8 @@ uniform Material material;
 uniform vec3 objColor;
 uniform vec3 ambientColor;
 uniform vec3 lightPos;
+uniform vec3 lightDir;
+
 uniform vec3 lightColor;
 uniform vec3 CameraPos;
 
@@ -30,8 +32,9 @@ void main() {
     //FragColor = vertexColor;
     //FragColor = texture(ourTexture, TexCoord) * texture(ourFace, TexCoord);
 
-    vec3 lightDir = normalize(lightPos - FragPos);
-    vec3 reflectVec = reflect(-lightDir, Normal);
+    //vec3 lightDir = normalize(lightPos - FragPos);
+    vec3 lightDirN = normalize(lightDir);
+    vec3 reflectVec = reflect(-lightDirN, Normal);
     vec3 CameraVec = normalize(CameraPos - FragPos);
 
 
@@ -48,7 +51,7 @@ void main() {
     vec3 specular = texture(material.specular, TexCoord).rgb * specularAmount * lightColor;
 
     //
-    float diffuseDot = dot(lightDir, Normal);
+    float diffuseDot = dot(lightDirN, Normal);
     if(diffuseDot < 0.0){
         diffuseDot = 0.0;
     }

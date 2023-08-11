@@ -1,34 +1,33 @@
 import {Shader} from './Shader';
 import {Camera} from './Camera';
+import {LightDirectional} from './LightDirectional';
 import * as GMath from './Math';
 import GUI from 'lil-gui'; 
 import { Transform } from './Transform';
 import { vec3, mat4, quat, glMatrix} from "gl-matrix";
 import { Material } from './Material';
+import { InputParam } from './InputParam';
 
 const main = () => {
 
-
-    // Find the canvas element
     const canvas = document.getElementById('webgl');
 
     if (!(canvas instanceof HTMLCanvasElement)) {
       throw new Error('No html canvas element.');
     }
   
-    // WebGL rendering context
     const gl = canvas.getContext('webgl2');
   
     if (!gl) {
       throw new Error('Unable to initialize WebGL.');
     }
 
-    var AMORTIZATION = 0.95;
+  var AMORTIZATION = 0.95;
   var drag = false;
   var old_x:number, old_y: number;
   var dX = 0, dY = 0;
   var THETA = 0;
-var PHI = 0;
+  var PHI = 0;
 
   var mouseDown = function (e: any) {
     console.log("mouseDown");
@@ -180,6 +179,7 @@ gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, indicesTypedArray, gl.STATIC_DRAW);
 
   //projMat.setPerspective(60, 800.0/800.0, 0.001, 100.0);
 
+    const light = new LightDirectional(vec3.fromValues(8, 10, 0), vec3.fromValues(0, 0, 0), vec3.fromValues(1.0, 1.0, 1.0));
 
     const camera = new Camera(vec3.fromValues(0, 0.5, 3.0), 0, 3.14, vec3.fromValues(0, 1, 0));
 
@@ -213,6 +213,9 @@ gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, indicesTypedArray, gl.STATIC_DRAW);
     // 2. view matrix
     mat4.lookAt(vm, eye, target, up);
     mat4.multiply(pvm, pvm, vm);
+
+
+    const inputParam = new InputParam();
     
     var tick = function()
     {
@@ -252,14 +255,17 @@ gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, indicesTypedArray, gl.STATIC_DRAW);
       var final = mat4.create();
       mat4.multiply(final, pvm, model);
 
+      inputParam.update(myMaterial, light);
+
 
       gl.uniformMatrix4fv(gl.getUniformLocation(myShader.program, "modelMat"), false, model);
       gl.uniformMatrix4fv(gl.getUniformLocation(myShader.program, "viewMat"), false, viewMat);
       gl.uniformMatrix4fv(gl.getUniformLocation(myShader.program, "projMat"), false, projMat);
       gl.uniform3f(gl.getUniformLocation(myShader.program, "objColor"), 1.0, 1.0, 1.0);
       gl.uniform3f(gl.getUniformLocation(myShader.program, "ambientColor"), 0.2, 0.2, 0.2);
-      gl.uniform3f(gl.getUniformLocation(myShader.program, "lightPos"), 8, 10, 0);
-      gl.uniform3f(gl.getUniformLocation(myShader.program, "lightColor"), 1.0, 1.0, 1.0);
+      //gl.uniform3f(gl.getUniformLocation(myShader.program, "lightPos"), 8, 10, 0);
+      gl.uniform3f(gl.getUniformLocation(myShader.program, "lightColor"), light.color[0], light.color[1], light.color[2]);
+      gl.uniform3f(gl.getUniformLocation(myShader.program, "lightDir"), light.direction[0], light.direction[1], light.direction[2]);
       gl.uniform3f(gl.getUniformLocation(myShader.program, "CameraPos"), camera.Position[0], camera.Position[1], camera.Position[2]);
 
       myMaterial.shader.setUniform3f("material.ambient", myMaterial.ambient);
@@ -280,7 +286,11 @@ gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, indicesTypedArray, gl.STATIC_DRAW);
     const gui = new GUI();
 
     const materialGroup = gui.addFolder( 'Material' );
-    materialGroup.add( myMaterial, 'shininess', 1, 64 );
+    materialGroup.add( inputParam, 'MaterialShininess', 1, 64 ).name( 'shininess' );
+    /*
+    const lightGroup = gui.addFolder( 'Light' );
+    lightGroup.add( light, 'shininess', 1, 64 );
+    */
 /*
     const gui = new GUI();
     gui.add( transform.rotate, 'x', -360, 360 ); 	// checkbox
