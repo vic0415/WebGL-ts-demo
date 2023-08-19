@@ -11456,10 +11456,10 @@ const loadImage = (url, image) => new Promise((resolve, reject) => {
 });
 function LoadResources() {
     return __awaiter(this, void 0, void 0, function* () {
-        vertexShaderSource = yield loadShaderFile("../vertexShader.glsl");
-        fragmentShaderSource = yield loadShaderFile("../fragmentShader.glsl");
-        vertexTextureShaderSource = yield loadShaderFile("../vertexShader_texture.glsl");
-        fragmentTextureShaderSource = yield loadShaderFile("../fragmentShader_texture.glsl");
+        vertexShaderSource = yield loadShaderFile("shader/vertexShader.glsl");
+        fragmentShaderSource = yield loadShaderFile("shader/fragmentShader.glsl");
+        vertexTextureShaderSource = yield loadShaderFile("shader/vertexShader_texture.glsl");
+        fragmentTextureShaderSource = yield loadShaderFile("shader/fragmentShader_texture.glsl");
         console.log("Vertex Shader:", vertexShaderSource);
         console.log("Fragment Shader:", fragmentShaderSource);
         loadImage("./image/container2.png", diffuseImage).then(img => {
