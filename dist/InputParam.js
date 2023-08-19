@@ -9,6 +9,7 @@ class InputParam {
         this.MaterialSpecularStrength = 1;
         this.LightDirectionX = 1;
         this.LightDirectionY = 1;
+        this.isGrayScale = true;
         this.whiteColor = gl_matrix_1.vec3.fromValues(1.0, 1.0, 1.0);
     }
     update(material, light) {

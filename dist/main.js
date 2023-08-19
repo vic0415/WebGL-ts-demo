@@ -111,25 +111,47 @@ const main = () => {
               -0.5,  0.5, 0.0,   1.0, 1.0, 0.0,   0.0, 1.0,  // top left
         */
     ];
+    const quadVertices = [
+        // positions   // texCoords
+        -1.0, 1.0, 0.0, 1.0,
+        -1.0, -1.0, 0.0, 0.0,
+        1.0, -1.0, 1.0, 0.0,
+        -1.0, 1.0, 0.0, 1.0,
+        1.0, -1.0, 1.0, 0.0,
+        1.0, 1.0, 1.0, 1.0
+    ];
     const indices = [
         0, 1, 3,
         1, 2, 3
     ];
-    const myShader = new Shader_1.Shader(gl, vertexShaderSource, fragmentShaderSource);
-    myShader.use();
+    const quadShader = new Shader_1.Shader(gl, vertexTextureShaderSource, fragmentTextureShaderSource);
+    const cubeShader = new Shader_1.Shader(gl, vertexShaderSource, fragmentShaderSource);
+    cubeShader.use();
     var isImageLoaded = false;
-    const myMaterial = new Material_1.Material(myShader, loadTextureToGPU(gl, gl.getUniformLocation(myShader.program, "material.diffuse"), diffuseImage, 0), loadTextureToGPU(gl, gl.getUniformLocation(myShader.program, "material.specular"), specularImage, 1), gl_matrix_1.vec3.fromValues(1.0, 1.0, 1.0), 8.0);
+    const myMaterial = new Material_1.Material(cubeShader, loadTextureToGPU(gl, gl.getUniformLocation(cubeShader.program, "material.diffuse"), diffuseImage, 0), loadTextureToGPU(gl, gl.getUniformLocation(cubeShader.program, "material.specular"), specularImage, 1), gl_matrix_1.vec3.fromValues(1.0, 1.0, 1.0), 8.0);
     // Vertext buffer
-    const positionBuffer = gl.createBuffer();
-    gl.bindBuffer(gl.ARRAY_BUFFER, positionBuffer);
-    var vertexPosTypedArray = new Float32Array(vertices);
+    const cubeVAO = gl.createVertexArray();
+    const cubeVBO = gl.createBuffer();
+    gl.bindVertexArray(cubeVAO);
+    gl.bindBuffer(gl.ARRAY_BUFFER, cubeVBO);
+    let vertexPosTypedArray = new Float32Array(vertices);
     gl.bufferData(gl.ARRAY_BUFFER, vertexPosTypedArray, gl.STATIC_DRAW);
-    gl.vertexAttribPointer(gl.getAttribLocation(myShader.program, 'aPos'), 3, gl.FLOAT, false, vertexPosTypedArray.BYTES_PER_ELEMENT * 8, 0);
     gl.enableVertexAttribArray(0);
-    gl.vertexAttribPointer(gl.getAttribLocation(myShader.program, 'aTexCoord'), 2, gl.FLOAT, false, vertexPosTypedArray.BYTES_PER_ELEMENT * 8, vertexPosTypedArray.BYTES_PER_ELEMENT * 3);
+    gl.vertexAttribPointer(gl.getAttribLocation(cubeShader.program, 'aPos'), 3, gl.FLOAT, false, vertexPosTypedArray.BYTES_PER_ELEMENT * 8, 0);
     gl.enableVertexAttribArray(2);
-    gl.vertexAttribPointer(gl.getAttribLocation(myShader.program, 'aNormal'), 3, gl.FLOAT, false, vertexPosTypedArray.BYTES_PER_ELEMENT * 8, vertexPosTypedArray.BYTES_PER_ELEMENT * 5);
+    gl.vertexAttribPointer(gl.getAttribLocation(cubeShader.program, 'aTexCoord'), 2, gl.FLOAT, false, vertexPosTypedArray.BYTES_PER_ELEMENT * 8, vertexPosTypedArray.BYTES_PER_ELEMENT * 3);
     gl.enableVertexAttribArray(1);
+    gl.vertexAttribPointer(gl.getAttribLocation(cubeShader.program, 'aNormal'), 3, gl.FLOAT, false, vertexPosTypedArray.BYTES_PER_ELEMENT * 8, vertexPosTypedArray.BYTES_PER_ELEMENT * 5);
+    const quadVAO = gl.createVertexArray();
+    const quadVBO = gl.createBuffer();
+    gl.bindVertexArray(quadVAO);
+    gl.bindBuffer(gl.ARRAY_BUFFER, quadVBO);
+    let quadVerticesArray = new Float32Array(quadVertices);
+    gl.bufferData(gl.ARRAY_BUFFER, quadVerticesArray, gl.STATIC_DRAW);
+    gl.enableVertexAttribArray(0);
+    gl.vertexAttribPointer(gl.getAttribLocation(quadShader.program, 'aPos'), 2, gl.FLOAT, false, quadVerticesArray.BYTES_PER_ELEMENT * 4, 0);
+    gl.enableVertexAttribArray(1);
+    gl.vertexAttribPointer(gl.getAttribLocation(quadShader.program, 'aTexCoords'), 2, gl.FLOAT, false, quadVerticesArray.BYTES_PER_ELEMENT * 4, quadVerticesArray.BYTES_PER_ELEMENT * 2);
     /*
     gl.vertexAttribPointer(gl.getAttribLocation(myShader.program, 'aPos'), 3, gl.FLOAT, false, vertexPosTypedArray.BYTES_PER_ELEMENT * 8, 0);
     gl.enableVertexAttribArray(0);
@@ -166,22 +188,48 @@ const main = () => {
     let initRotQuat = gl_matrix_1.quat.create();
     gl_matrix_1.quat.fromEuler(initRotQuat, 45, 45, 0);
     gl_matrix_1.mat4.fromQuat(model, initRotQuat);
+    // framebuffer configuration
+    // -------------------------
+    const framebuffer = gl.createFramebuffer();
+    gl.bindFramebuffer(gl.FRAMEBUFFER, framebuffer);
+    // create a color attachment texture
+    gl.activeTexture(gl.TEXTURE0 + 2);
+    const screenTexture = gl.createTexture();
+    gl.bindTexture(gl.TEXTURE_2D, screenTexture);
+    gl.texImage2D(gl.TEXTURE_2D, 0, // level
+    gl.RGBA, // internalFormat
+    gl.canvas.width, gl.canvas.height, 0, // border
+    gl.RGBA, // format
+    gl.UNSIGNED_BYTE, // type
+    null);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST);
+    gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, // attachment
+    gl.TEXTURE_2D, screenTexture, 0);
+    const rbo = gl.createRenderbuffer();
+    gl.bindRenderbuffer(gl.RENDERBUFFER, rbo);
+    gl.renderbufferStorage(gl.RENDERBUFFER, gl.DEPTH24_STENCIL8, gl.canvas.width, gl.canvas.height); // use a single renderbuffer object for both a depth AND stencil buffer.
+    gl.framebufferRenderbuffer(gl.FRAMEBUFFER, gl.DEPTH_STENCIL_ATTACHMENT, gl.RENDERBUFFER, rbo); // now actually attach it
+    // now that we actually created the framebuffer and added all attachments we want to check if it is actually complete now
+    if (gl.checkFramebufferStatus(gl.FRAMEBUFFER) != gl.FRAMEBUFFER_COMPLETE)
+        console.error("ERROR::FRAMEBUFFER:: Framebuffer is not complete!");
+    gl.bindFramebuffer(gl.FRAMEBUFFER, framebuffer);
     const inputParam = new InputParam_1.InputParam();
     var tick = function () {
         gl.viewport(0, 0, gl.canvas.width, gl.canvas.height);
-        gl.clearColor(0, 0, 0, 1.0);
+        if (inputParam.isGrayScale) {
+            gl.bindFramebuffer(gl.FRAMEBUFFER, framebuffer);
+        }
+        else {
+            gl.bindFramebuffer(gl.FRAMEBUFFER, null);
+        }
+        // bind to framebuffer and draw scene as we normally would to color texture 
+        gl.enable(gl.DEPTH_TEST); // enable depth testing (is disabled for rendering screen-space quad)
+        // make sure we clear the framebuffer's content
+        gl.clearColor(0.1, 0.1, 0.1, 1.0);
         gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
-        /*
-              let modelMat = new GMath.Matrix4();
-        
-              //modelMat.setRotate(transform.rotate.x, 1, 0, 0);
-              //modelMat.setRotate(transform.rotate.y, 0, 1, 0);
-              modelMat = GMath.rotate(transform.rotate.x, Math.cos(-transform.rotate.y * Math.PI / 180), 0, Math.sin(-transform.rotate.y * Math.PI / 180)).concat(GMath.rotate(transform.rotate.y, 0, 1, 0));
-        
-              var modelMatNew = mat4.create();
-              */
-        //modelMat.rotateXY(transform.rotate.x*Math.PI/180, transform.rotate.y*Math.PI/180);
-        //modelMat.rotateX(transform.rotate.x*Math.PI/180);
+        gl.bindVertexArray(cubeVAO);
+        cubeShader.use();
         /*
               let modelMat = glMatrix.mat4.create();
         
@@ -190,23 +238,26 @@ const main = () => {
               glMatrix.mat4.fromQuat(newMat, MyQuaternion);
               glMatrix.mat4.multiply(modelMat, newMat, modelMat);
         */
-        var degY = transform.rotate.x;
-        var degX = transform.rotate.y;
-        var degZ = transform.rotate.z;
-        //glMatrix.quat.fromEuler(q, degY, degX, degZ);
+        /*
+              var degY = transform.rotate.x;
+              var degX = transform.rotate.y;
+              var degZ = transform.rotate.z;
+        
+              glMatrix.quat.fromEuler(q, degY, degX, degZ);
+              */
         gl_matrix_1.quat.fromEuler(q, dY * 180 / Math.PI, dX * 180 / Math.PI, 0);
         gl_matrix_1.mat4.fromQuat(newrot, q);
         gl_matrix_1.mat4.multiply(model, newrot, model);
         inputParam.update(myMaterial, light);
-        gl.uniformMatrix4fv(gl.getUniformLocation(myShader.program, "modelMat"), false, model);
-        gl.uniformMatrix4fv(gl.getUniformLocation(myShader.program, "viewMat"), false, viewMat);
-        gl.uniformMatrix4fv(gl.getUniformLocation(myShader.program, "projMat"), false, projMat);
-        gl.uniform3f(gl.getUniformLocation(myShader.program, "objColor"), 1.0, 1.0, 1.0);
-        gl.uniform3f(gl.getUniformLocation(myShader.program, "ambientColor"), 0.2, 0.2, 0.2);
+        gl.uniformMatrix4fv(gl.getUniformLocation(cubeShader.program, "modelMat"), false, model);
+        gl.uniformMatrix4fv(gl.getUniformLocation(cubeShader.program, "viewMat"), false, viewMat);
+        gl.uniformMatrix4fv(gl.getUniformLocation(cubeShader.program, "projMat"), false, projMat);
+        gl.uniform3f(gl.getUniformLocation(cubeShader.program, "objColor"), 1.0, 1.0, 1.0);
+        gl.uniform3f(gl.getUniformLocation(cubeShader.program, "ambientColor"), 0.2, 0.2, 0.2);
         //gl.uniform3f(gl.getUniformLocation(myShader.program, "lightPos"), 8, 10, 0);
-        gl.uniform3f(gl.getUniformLocation(myShader.program, "lightColor"), light.color[0], light.color[1], light.color[2]);
-        gl.uniform3f(gl.getUniformLocation(myShader.program, "lightDir"), light.direction[0], light.direction[1], light.direction[2]);
-        gl.uniform3f(gl.getUniformLocation(myShader.program, "CameraPos"), camera.Position[0], camera.Position[1], camera.Position[2]);
+        gl.uniform3f(gl.getUniformLocation(cubeShader.program, "lightColor"), light.color[0], light.color[1], light.color[2]);
+        gl.uniform3f(gl.getUniformLocation(cubeShader.program, "lightDir"), light.direction[0], light.direction[1], light.direction[2]);
+        gl.uniform3f(gl.getUniformLocation(cubeShader.program, "CameraPos"), camera.Position[0], camera.Position[1], camera.Position[2]);
         myMaterial.shader.setUniform3f("material.ambient", myMaterial.ambient);
         myMaterial.shader.setUniform1i("material.diffuse", 0);
         myMaterial.shader.setUniform1i("material.specular", 1);
@@ -214,7 +265,19 @@ const main = () => {
         myMaterial.shader.setUniform1f("material.diffuseStrength", inputParam.MaterialDiffuseStrength);
         myMaterial.shader.setUniform1f("material.specularStrength", inputParam.MaterialSpecularStrength);
         gl.drawArrays(gl.TRIANGLES, 0, 36);
-        //gl.drawArrays(gl.TRIANGLES, 0, 6);
+        if (inputParam.isGrayScale) {
+            // now bind back to default framebuffer and draw a quad plane with the attached framebuffer color texture
+            gl.bindFramebuffer(gl.FRAMEBUFFER, null);
+            gl.disable(gl.DEPTH_TEST); // disable depth test so screen-space quad isn't discarded due to depth test.
+            // clear all relevant buffers
+            gl.clearColor(0, 0, 0, 1.0); // set clear color to white (not really necessary actually, since we won't be able to see behind the quad anyways)
+            gl.clear(gl.COLOR_BUFFER_BIT);
+            quadShader.use();
+            gl.bindVertexArray(quadVAO);
+            gl.bindTexture(gl.TEXTURE_2D, screenTexture); // use the color attachment texture as the texture of the quad plane
+            quadShader.setUniform1i("screenTexture", 2);
+            gl.drawArrays(gl.TRIANGLES, 0, 6);
+        }
         requestAnimationFrame(tick);
     };
     tick();
@@ -223,6 +286,7 @@ const main = () => {
     materialGroup.add(inputParam, 'MaterialShininess', 1, 64).name('shininess');
     materialGroup.add(inputParam, 'MaterialDiffuseStrength', 0, 1).name('MaterialDiffuseStrength');
     materialGroup.add(inputParam, 'MaterialSpecularStrength', 0, 1).name('MaterialSpecularStrength');
+    materialGroup.add(inputParam, 'isGrayScale').name('gray scale');
     /*
     const lightGroup = gui.addFolder( 'Light' );
     lightGroup.add( light, 'shininess', 1, 64 );
@@ -255,8 +319,10 @@ const loadImage = (url, image) => new Promise((resolve, reject) => {
 });
 function LoadResources() {
     return __awaiter(this, void 0, void 0, function* () {
-        vertexShaderSource = yield loadShaderFile("vertexShader.glsl");
-        fragmentShaderSource = yield loadShaderFile("fragmentShader.glsl");
+        vertexShaderSource = yield loadShaderFile("../vertexShader.glsl");
+        fragmentShaderSource = yield loadShaderFile("../fragmentShader.glsl");
+        vertexTextureShaderSource = yield loadShaderFile("../vertexShader_texture.glsl");
+        fragmentTextureShaderSource = yield loadShaderFile("../fragmentShader_texture.glsl");
         console.log("Vertex Shader:", vertexShaderSource);
         console.log("Fragment Shader:", fragmentShaderSource);
         loadImage("./image/container2.png", diffuseImage).then(img => {
@@ -270,6 +336,8 @@ function LoadResources() {
 }
 var vertexShaderSource = "";
 var fragmentShaderSource = "";
+var vertexTextureShaderSource = "";
+var fragmentTextureShaderSource = "";
 var diffuseImage = new Image();
 var specularImage = new Image();
 function loadTextureToGPU(gl, u_Sampler, image, texUnit) {
