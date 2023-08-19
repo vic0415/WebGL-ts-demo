@@ -392,10 +392,10 @@ const loadImage = (url: string, image: HTMLImageElement) => new Promise((resolve
 });
 
 async function LoadResources() {
-  vertexShaderSource = await loadShaderFile("../vertexShader.glsl");
-  fragmentShaderSource = await loadShaderFile("../fragmentShader.glsl");
-  vertexTextureShaderSource = await loadShaderFile("../vertexShader_texture.glsl");
-  fragmentTextureShaderSource = await loadShaderFile("../fragmentShader_texture.glsl");
+  vertexShaderSource = await loadShaderFile("shader/vertexShader.glsl");
+  fragmentShaderSource = await loadShaderFile("shader/fragmentShader.glsl");
+  vertexTextureShaderSource = await loadShaderFile("shader/vertexShader_texture.glsl");
+  fragmentTextureShaderSource = await loadShaderFile("shader/fragmentShader_texture.glsl");
 
   console.log("Vertex Shader:", vertexShaderSource);
   console.log("Fragment Shader:", fragmentShaderSource);
