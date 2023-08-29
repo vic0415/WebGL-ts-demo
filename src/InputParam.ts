@@ -8,7 +8,7 @@ export class InputParam{
     public MaterialSpecularStrength: number = 1;
     public LightDirectionX: number = 1;
     public LightDirectionY: number = 1;
-    public isGrayScale: boolean = true;
+    public isGrayScale: boolean = false;
 
     private whiteColor: vec3 = vec3.fromValues(1.0, 1.0, 1.0);
 

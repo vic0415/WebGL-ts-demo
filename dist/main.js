@@ -16,7 +16,6 @@ const Shader_1 = require("./Shader");
 const Camera_1 = require("./Camera");
 const LightDirectional_1 = require("./LightDirectional");
 const lil_gui_1 = __importDefault(require("lil-gui"));
-const Transform_1 = require("./Transform");
 const gl_matrix_1 = require("gl-matrix");
 const Material_1 = require("./Material");
 const InputParam_1 = require("./InputParam");
@@ -67,42 +66,47 @@ const main = () => {
     gl.enable(gl.DEPTH_TEST);
     //gl.enable(gl.CULL_FACE);
     const vertices = [
-        -0.5, -0.5, -0.5, 0.0, 0.0, 0.0, 0.0, -1.0,
-        0.5, -0.5, -0.5, 1.0, 0.0, 0.0, 0.0, -1.0,
-        0.5, 0.5, -0.5, 1.0, 1.0, 0.0, 0.0, -1.0,
-        0.5, 0.5, -0.5, 1.0, 1.0, 0.0, 0.0, -1.0,
-        -0.5, 0.5, -0.5, 0.0, 1.0, 0.0, 0.0, -1.0,
-        -0.5, -0.5, -0.5, 0.0, 0.0, 0.0, 0.0, -1.0,
-        -0.5, -0.5, 0.5, 0.0, 0.0, 0.0, 0.0, 1.0,
-        0.5, -0.5, 0.5, 1.0, 0.0, 0.0, 0.0, 1.0,
-        0.5, 0.5, 0.5, 1.0, 1.0, 0.0, 0.0, 1.0,
-        0.5, 0.5, 0.5, 1.0, 1.0, 0.0, 0.0, 1.0,
-        -0.5, 0.5, 0.5, 0.0, 1.0, 0.0, 0.0, 1.0,
-        -0.5, -0.5, 0.5, 0.0, 0.0, 0.0, 0.0, 1.0,
-        -0.5, 0.5, 0.5, 1.0, 0.0, -1.0, 0.0, 0.0,
-        -0.5, 0.5, -0.5, 1.0, 1.0, -1.0, 0.0, 0.0,
-        -0.5, -0.5, -0.5, 0.0, 1.0, -1.0, 0.0, 0.0,
-        -0.5, -0.5, -0.5, 0.0, 1.0, -1.0, 0.0, 0.0,
-        -0.5, -0.5, 0.5, 0.0, 0.0, -1.0, 0.0, 0.0,
-        -0.5, 0.5, 0.5, 1.0, 0.0, -1.0, 0.0, 0.0,
-        0.5, 0.5, 0.5, 1.0, 0.0, 1.0, 0.0, 0.0,
-        0.5, 0.5, -0.5, 1.0, 1.0, 1.0, 0.0, 0.0,
-        0.5, -0.5, -0.5, 0.0, 1.0, 1.0, 0.0, 0.0,
-        0.5, -0.5, -0.5, 0.0, 1.0, 1.0, 0.0, 0.0,
-        0.5, -0.5, 0.5, 0.0, 0.0, 1.0, 0.0, 0.0,
-        0.5, 0.5, 0.5, 1.0, 0.0, 1.0, 0.0, 0.0,
-        -0.5, -0.5, -0.5, 0.0, 1.0, 0.0, -1.0, 0.0,
-        0.5, -0.5, -0.5, 1.0, 1.0, 0.0, -1.0, 0.0,
-        0.5, -0.5, 0.5, 1.0, 0.0, 0.0, -1.0, 0.0,
-        0.5, -0.5, 0.5, 1.0, 0.0, 0.0, -1.0, 0.0,
-        -0.5, -0.5, 0.5, 0.0, 0.0, 0.0, -1.0, 0.0,
-        -0.5, -0.5, -0.5, 0.0, 1.0, 0.0, -1.0, 0.0,
-        -0.5, 0.5, -0.5, 0.0, 1.0, 0.0, 1.0, 0.0,
-        0.5, 0.5, -0.5, 1.0, 1.0, 0.0, 1.0, 0.0,
-        0.5, 0.5, 0.5, 1.0, 0.0, 0.0, 1.0, 0.0,
-        0.5, 0.5, 0.5, 1.0, 0.0, 0.0, 1.0, 0.0,
-        -0.5, 0.5, 0.5, 0.0, 0.0, 0.0, 1.0, 0.0,
-        -0.5, 0.5, -0.5, 0.0, 1.0, 0.0, 1.0, 0.0
+        -1.0, -1.0, -1.0, 0.0, 0.0, -1.0, 0.0, 0.0,
+        1.0, 1.0, -1.0, 0.0, 0.0, -1.0, 1.0, 1.0,
+        1.0, -1.0, -1.0, 0.0, 0.0, -1.0, 1.0, 0.0,
+        1.0, 1.0, -1.0, 0.0, 0.0, -1.0, 1.0, 1.0,
+        -1.0, -1.0, -1.0, 0.0, 0.0, -1.0, 0.0, 0.0,
+        -1.0, 1.0, -1.0, 0.0, 0.0, -1.0, 0.0, 1.0,
+        // front face
+        -1.0, -1.0, 1.0, 0.0, 0.0, 1.0, 0.0, 0.0,
+        1.0, -1.0, 1.0, 0.0, 0.0, 1.0, 1.0, 0.0,
+        1.0, 1.0, 1.0, 0.0, 0.0, 1.0, 1.0, 1.0,
+        1.0, 1.0, 1.0, 0.0, 0.0, 1.0, 1.0, 1.0,
+        -1.0, 1.0, 1.0, 0.0, 0.0, 1.0, 0.0, 1.0,
+        -1.0, -1.0, 1.0, 0.0, 0.0, 1.0, 0.0, 0.0,
+        // left face
+        -1.0, 1.0, 1.0, -1.0, 0.0, 0.0, 1.0, 0.0,
+        -1.0, 1.0, -1.0, -1.0, 0.0, 0.0, 1.0, 1.0,
+        -1.0, -1.0, -1.0, -1.0, 0.0, 0.0, 0.0, 1.0,
+        -1.0, -1.0, -1.0, -1.0, 0.0, 0.0, 0.0, 1.0,
+        -1.0, -1.0, 1.0, -1.0, 0.0, 0.0, 0.0, 0.0,
+        -1.0, 1.0, 1.0, -1.0, 0.0, 0.0, 1.0, 0.0,
+        // right face
+        1.0, 1.0, 1.0, 1.0, 0.0, 0.0, 1.0, 0.0,
+        1.0, -1.0, -1.0, 1.0, 0.0, 0.0, 0.0, 1.0,
+        1.0, 1.0, -1.0, 1.0, 0.0, 0.0, 1.0, 1.0,
+        1.0, -1.0, -1.0, 1.0, 0.0, 0.0, 0.0, 1.0,
+        1.0, 1.0, 1.0, 1.0, 0.0, 0.0, 1.0, 0.0,
+        1.0, -1.0, 1.0, 1.0, 0.0, 0.0, 0.0, 0.0,
+        // bottom face
+        -1.0, -1.0, -1.0, 0.0, -1.0, 0.0, 0.0, 1.0,
+        1.0, -1.0, -1.0, 0.0, -1.0, 0.0, 1.0, 1.0,
+        1.0, -1.0, 1.0, 0.0, -1.0, 0.0, 1.0, 0.0,
+        1.0, -1.0, 1.0, 0.0, -1.0, 0.0, 1.0, 0.0,
+        -1.0, -1.0, 1.0, 0.0, -1.0, 0.0, 0.0, 0.0,
+        -1.0, -1.0, -1.0, 0.0, -1.0, 0.0, 0.0, 1.0,
+        // top face
+        -1.0, 1.0, -1.0, 0.0, 1.0, 0.0, 0.0, 1.0,
+        1.0, 1.0, 1.0, 0.0, 1.0, 0.0, 1.0, 0.0,
+        1.0, 1.0, -1.0, 0.0, 1.0, 0.0, 1.0, 1.0,
+        1.0, 1.0, 1.0, 0.0, 1.0, 0.0, 1.0, 0.0,
+        -1.0, 1.0, -1.0, 0.0, 1.0, 0.0, 0.0, 1.0,
+        -1.0, 1.0, 1.0, 0.0, 1.0, 0.0, 0.0, 0.0 // bottom-left       
         /*
               // positions          // colors           // texture coords
               0.5,  0.5, 0.0,   1.0, 0.0, 0.0,   1.0, 1.0, // top right
@@ -110,6 +114,15 @@ const main = () => {
               -0.5, -0.5, 0.0,   0.0, 0.0, 1.0,   0.0, 0.0, // bottom left
               -0.5,  0.5, 0.0,   1.0, 1.0, 0.0,   0.0, 1.0,  // top left
         */
+    ];
+    const planeVertices = [
+        // positions            // normals         // texcoords
+        25.0, -0.5, 25.0, 0.0, 1.0, 0.0, 25.0, 0.0,
+        -25.0, -0.5, 25.0, 0.0, 1.0, 0.0, 0.0, 0.0,
+        -25.0, -0.5, -25.0, 0.0, 1.0, 0.0, 0.0, 25.0,
+        25.0, -0.5, 25.0, 0.0, 1.0, 0.0, 25.0, 0.0,
+        -25.0, -0.5, -25.0, 0.0, 1.0, 0.0, 0.0, 25.0,
+        25.0, -0.5, -25.0, 0.0, 1.0, 0.0, 25.0, 25.0
     ];
     const quadVertices = [
         // positions   // texCoords
@@ -125,7 +138,10 @@ const main = () => {
         1, 2, 3
     ];
     const quadShader = new Shader_1.Shader(gl, vertexTextureShaderSource, fragmentTextureShaderSource);
+    //const floorShader = new Shader(gl, vertexFloorShaderSource, fragmentFloorShaderSource);
     const cubeShader = new Shader_1.Shader(gl, vertexShaderSource, fragmentShaderSource);
+    const simpleDepthShader = new Shader_1.Shader(gl, vertexSimpleDepthShaderSource, fragmentSimpleDepthShaderSource);
+    const debugDepthShader = new Shader_1.Shader(gl, vertexDebugDepthShaderSource, fragmentDebugDepthShaderSource);
     cubeShader.use();
     var isImageLoaded = false;
     const myMaterial = new Material_1.Material(cubeShader, loadTextureToGPU(gl, gl.getUniformLocation(cubeShader.program, "material.diffuse"), diffuseImage, 0), loadTextureToGPU(gl, gl.getUniformLocation(cubeShader.program, "material.specular"), specularImage, 1), gl_matrix_1.vec3.fromValues(1.0, 1.0, 1.0), 8.0);
@@ -134,14 +150,28 @@ const main = () => {
     const cubeVBO = gl.createBuffer();
     gl.bindVertexArray(cubeVAO);
     gl.bindBuffer(gl.ARRAY_BUFFER, cubeVBO);
-    let vertexPosTypedArray = new Float32Array(vertices);
-    gl.bufferData(gl.ARRAY_BUFFER, vertexPosTypedArray, gl.STATIC_DRAW);
+    let cubeVerticeArray = new Float32Array(vertices);
+    gl.bufferData(gl.ARRAY_BUFFER, cubeVerticeArray, gl.STATIC_DRAW);
     gl.enableVertexAttribArray(0);
-    gl.vertexAttribPointer(gl.getAttribLocation(cubeShader.program, 'aPos'), 3, gl.FLOAT, false, vertexPosTypedArray.BYTES_PER_ELEMENT * 8, 0);
+    gl.vertexAttribPointer(gl.getAttribLocation(simpleDepthShader.program, 'aPos'), 3, gl.FLOAT, false, cubeVerticeArray.BYTES_PER_ELEMENT * 8, 0);
+    gl.vertexAttribPointer(gl.getAttribLocation(cubeShader.program, 'aPos'), 3, gl.FLOAT, false, cubeVerticeArray.BYTES_PER_ELEMENT * 8, 0);
     gl.enableVertexAttribArray(2);
-    gl.vertexAttribPointer(gl.getAttribLocation(cubeShader.program, 'aTexCoord'), 2, gl.FLOAT, false, vertexPosTypedArray.BYTES_PER_ELEMENT * 8, vertexPosTypedArray.BYTES_PER_ELEMENT * 3);
+    gl.vertexAttribPointer(gl.getAttribLocation(cubeShader.program, 'aTexCoord'), 2, gl.FLOAT, false, cubeVerticeArray.BYTES_PER_ELEMENT * 8, cubeVerticeArray.BYTES_PER_ELEMENT * 6);
     gl.enableVertexAttribArray(1);
-    gl.vertexAttribPointer(gl.getAttribLocation(cubeShader.program, 'aNormal'), 3, gl.FLOAT, false, vertexPosTypedArray.BYTES_PER_ELEMENT * 8, vertexPosTypedArray.BYTES_PER_ELEMENT * 5);
+    gl.vertexAttribPointer(gl.getAttribLocation(cubeShader.program, 'aNormal'), 3, gl.FLOAT, false, cubeVerticeArray.BYTES_PER_ELEMENT * 8, cubeVerticeArray.BYTES_PER_ELEMENT * 3);
+    const planeVAO = gl.createVertexArray();
+    const planeVBO = gl.createBuffer();
+    gl.bindVertexArray(planeVAO);
+    gl.bindBuffer(gl.ARRAY_BUFFER, planeVBO);
+    let planeVerticeArray = new Float32Array(planeVertices);
+    gl.bufferData(gl.ARRAY_BUFFER, planeVerticeArray, gl.STATIC_DRAW);
+    gl.enableVertexAttribArray(0);
+    gl.vertexAttribPointer(gl.getAttribLocation(simpleDepthShader.program, 'aPos'), 3, gl.FLOAT, false, planeVerticeArray.BYTES_PER_ELEMENT * 8, 0);
+    gl.vertexAttribPointer(gl.getAttribLocation(cubeShader.program, 'aPos'), 3, gl.FLOAT, false, planeVerticeArray.BYTES_PER_ELEMENT * 8, 0);
+    gl.enableVertexAttribArray(1);
+    gl.vertexAttribPointer(gl.getAttribLocation(cubeShader.program, 'aNormal'), 3, gl.FLOAT, false, planeVerticeArray.BYTES_PER_ELEMENT * 8, planeVerticeArray.BYTES_PER_ELEMENT * 3);
+    gl.enableVertexAttribArray(2);
+    gl.vertexAttribPointer(gl.getAttribLocation(cubeShader.program, 'aTexCoord'), 2, gl.FLOAT, false, planeVerticeArray.BYTES_PER_ELEMENT * 8, planeVerticeArray.BYTES_PER_ELEMENT * 6);
     const quadVAO = gl.createVertexArray();
     const quadVBO = gl.createBuffer();
     gl.bindVertexArray(quadVAO);
@@ -149,9 +179,9 @@ const main = () => {
     let quadVerticesArray = new Float32Array(quadVertices);
     gl.bufferData(gl.ARRAY_BUFFER, quadVerticesArray, gl.STATIC_DRAW);
     gl.enableVertexAttribArray(0);
-    gl.vertexAttribPointer(gl.getAttribLocation(quadShader.program, 'aPos'), 2, gl.FLOAT, false, quadVerticesArray.BYTES_PER_ELEMENT * 4, 0);
+    gl.vertexAttribPointer(gl.getAttribLocation(debugDepthShader.program, 'aPos'), 2, gl.FLOAT, false, quadVerticesArray.BYTES_PER_ELEMENT * 4, 0);
     gl.enableVertexAttribArray(1);
-    gl.vertexAttribPointer(gl.getAttribLocation(quadShader.program, 'aTexCoords'), 2, gl.FLOAT, false, quadVerticesArray.BYTES_PER_ELEMENT * 4, quadVerticesArray.BYTES_PER_ELEMENT * 2);
+    gl.vertexAttribPointer(gl.getAttribLocation(debugDepthShader.program, 'aTexCoords'), 2, gl.FLOAT, false, quadVerticesArray.BYTES_PER_ELEMENT * 4, quadVerticesArray.BYTES_PER_ELEMENT * 2);
     /*
     gl.vertexAttribPointer(gl.getAttribLocation(myShader.program, 'aPos'), 3, gl.FLOAT, false, vertexPosTypedArray.BYTES_PER_ELEMENT * 8, 0);
     gl.enableVertexAttribArray(0);
@@ -164,16 +194,8 @@ const main = () => {
     gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, indicesTypedArray, gl.STATIC_DRAW);
     */
     //ext?.bindVertexArrayOES(null);  
-    const transform = new Transform_1.Transform();
-    //transform.rotate = 0;
-    /*  const camera = new Camera(new GMath.Vector3(0, 0.5, 3.0), 0, 3.14, new GMath.Vector3(0, 1, 0));
-    
-      let viewMat = new GMath.Matrix4();*/
-    //let projMat = new GMath.Matrix4();
-    //modelMat.translate(0.5, 0, 0);
-    //projMat.setPerspective(60, 800.0/800.0, 0.001, 100.0);
-    const light = new LightDirectional_1.LightDirectional(gl_matrix_1.vec3.fromValues(8, 10, 0), gl_matrix_1.vec3.fromValues(0, 0, 0), gl_matrix_1.vec3.fromValues(1.0, 1.0, 1.0));
-    const camera = new Camera_1.Camera(gl_matrix_1.vec3.fromValues(0, 0.5, 3.0), 0, 3.14, gl_matrix_1.vec3.fromValues(0, 1, 0));
+    const light = new LightDirectional_1.LightDirectional(gl_matrix_1.vec3.fromValues(4, 2, 0), gl_matrix_1.vec3.fromValues(0, 0, 0), gl_matrix_1.vec3.fromValues(1.0, 1.0, 1.0));
+    const camera = new Camera_1.Camera(gl_matrix_1.vec3.fromValues(0, 0.5, 6.0), 0, 3.14, gl_matrix_1.vec3.fromValues(0, 1, 0));
     let trans = gl_matrix_1.mat4.create();
     let viewMat = gl_matrix_1.mat4.create();
     let projMat = gl_matrix_1.mat4.create();
@@ -186,10 +208,9 @@ const main = () => {
     var newrot = gl_matrix_1.mat4.create();
     var model = gl_matrix_1.mat4.create();
     let initRotQuat = gl_matrix_1.quat.create();
-    gl_matrix_1.quat.fromEuler(initRotQuat, 45, 45, 0);
+    gl_matrix_1.quat.fromEuler(initRotQuat, 0, 0, 0);
     gl_matrix_1.mat4.fromQuat(model, initRotQuat);
     // framebuffer configuration
-    // -------------------------
     const framebuffer = gl.createFramebuffer();
     gl.bindFramebuffer(gl.FRAMEBUFFER, framebuffer);
     // create a color attachment texture
@@ -214,8 +235,97 @@ const main = () => {
     if (gl.checkFramebufferStatus(gl.FRAMEBUFFER) != gl.FRAMEBUFFER_COMPLETE)
         console.error("ERROR::FRAMEBUFFER:: Framebuffer is not complete!");
     gl.bindFramebuffer(gl.FRAMEBUFFER, framebuffer);
+    // depth map
+    const depthMapFBO = gl.createFramebuffer();
+    gl.bindFramebuffer(gl.FRAMEBUFFER, depthMapFBO);
+    const SHADOW_WIDTH = 2048, SHADOW_HEIGHT = 2048;
+    gl.activeTexture(gl.TEXTURE0 + 3);
+    const depthMap = gl.createTexture();
+    gl.bindTexture(gl.TEXTURE_2D, depthMap);
+    gl.texImage2D(gl.TEXTURE_2D, 0, // level
+    gl.DEPTH_COMPONENT24, // internalFormat
+    SHADOW_WIDTH, SHADOW_HEIGHT, 0, // border
+    gl.DEPTH_COMPONENT, // format
+    gl.UNSIGNED_INT, // type
+    null);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.REPEAT);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.REPEAT);
+    gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.DEPTH_ATTACHMENT, // attachment
+    gl.TEXTURE_2D, depthMap, 0);
+    //gl.drawBuffers([gl.NONE]); // opengl: drawbuffer
+    //gl.readBuffer(gl.NONE);
+    gl.bindFramebuffer(gl.FRAMEBUFFER, null);
     const inputParam = new InputParam_1.InputParam();
+    let initRotQuatFloor = gl_matrix_1.quat.fromEuler(gl_matrix_1.quat.create(), 0, 0, 0);
+    let modelFloor = gl_matrix_1.mat4.fromQuat(gl_matrix_1.mat4.create(), initRotQuatFloor);
+    gl_matrix_1.mat4.translate(modelFloor, modelFloor, gl_matrix_1.vec3.fromValues(0, -0.5, 0));
+    //mat4.translate(model, model, vec3.fromValues(0, 0.5, 0));
+    // rended loop
     var tick = function () {
+        inputParam.update(myMaterial, light);
+        gl.bindFramebuffer(gl.FRAMEBUFFER, null);
+        gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
+        gl.clearColor(0.1, 0.6, 0.6, 1.0);
+        /*
+        let modelMat = glMatrix.mat4.create();
+  
+        let newMat = glMatrix.mat4.create();
+        let MyQuaternion = glMatrix.quat.fromEuler(glMatrix.quat.create(), transform.rotate.x, transform.rotate.y, transform.rotate.z);
+        glMatrix.mat4.fromQuat(newMat, MyQuaternion);
+        glMatrix.mat4.multiply(modelMat, newMat, modelMat);
+  */
+        /*
+              var degY = transform.rotate.x;
+              var degX = transform.rotate.y;
+              var degZ = transform.rotate.z;
+        
+              glMatrix.quat.fromEuler(q, degY, degX, degZ);
+              */
+        gl_matrix_1.quat.fromEuler(q, dY * 180 / Math.PI, dX * 180 / Math.PI, 0);
+        gl_matrix_1.mat4.fromQuat(newrot, q);
+        gl_matrix_1.mat4.multiply(model, newrot, model);
+        // depth map
+        let lightProjection = gl_matrix_1.mat4.create();
+        let lightView = gl_matrix_1.mat4.create();
+        let lightSpaceMatrix = gl_matrix_1.mat4.create();
+        let near_plane = 0.001, far_plane = 100;
+        gl_matrix_1.mat4.ortho(lightProjection, -10.0, 10.0, -10.0, 10.0, near_plane, far_plane);
+        lightView = gl_matrix_1.mat4.lookAt(lightView, light.position, gl_matrix_1.vec3.fromValues(0, 0, 0), gl_matrix_1.vec3.fromValues(0.0, 1.0, 0.0));
+        lightSpaceMatrix = gl_matrix_1.mat4.mul(lightSpaceMatrix, lightProjection, lightView);
+        simpleDepthShader.use();
+        gl.uniformMatrix4fv(gl.getUniformLocation(simpleDepthShader.program, "lightSpaceMatrix"), false, lightSpaceMatrix);
+        gl.enable(gl.DEPTH_TEST);
+        //gl.viewport(0, 0, gl.canvas.width, gl.canvas.height);
+        gl.viewport(0, 0, SHADOW_WIDTH, SHADOW_HEIGHT);
+        gl.bindFramebuffer(gl.FRAMEBUFFER, depthMapFBO);
+        gl.clear(gl.DEPTH_BUFFER_BIT);
+        gl.activeTexture(gl.TEXTURE0 + 3);
+        gl.bindTexture(gl.TEXTURE_2D, depthMap);
+        gl.bindVertexArray(cubeVAO);
+        gl.uniformMatrix4fv(gl.getUniformLocation(simpleDepthShader.program, "model"), false, model);
+        gl.enable(gl.CULL_FACE);
+        gl.cullFace(gl.FRONT);
+        gl.drawArrays(gl.TRIANGLES, 0, 36);
+        gl.bindVertexArray(planeVAO);
+        gl.uniformMatrix4fv(gl.getUniformLocation(simpleDepthShader.program, "model"), false, modelFloor);
+        gl.drawArrays(gl.TRIANGLES, 0, 6);
+        gl.disable(gl.CULL_FACE);
+        /*
+        //depth map debug
+        gl.bindFramebuffer(gl.FRAMEBUFFER, null);
+        gl.viewport(0, 0, gl.canvas.width, gl.canvas.height);
+  
+        gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
+  
+        debugDepthShader.use();
+        gl.bindVertexArray(quadVAO);
+        gl.activeTexture(gl.TEXTURE0 + 3);
+        gl.bindTexture(gl.TEXTURE_2D, depthMap);	// use the color attachment texture as the texture of the quad plane
+        debugDepthShader.setUniform1i("depthMap", 3);
+        gl.drawArrays(gl.TRIANGLES, 0, 6);
+  */
         gl.viewport(0, 0, gl.canvas.width, gl.canvas.height);
         if (inputParam.isGrayScale) {
             gl.bindFramebuffer(gl.FRAMEBUFFER, framebuffer);
@@ -230,25 +340,7 @@ const main = () => {
         gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
         gl.bindVertexArray(cubeVAO);
         cubeShader.use();
-        /*
-              let modelMat = glMatrix.mat4.create();
-        
-              let newMat = glMatrix.mat4.create();
-              let MyQuaternion = glMatrix.quat.fromEuler(glMatrix.quat.create(), transform.rotate.x, transform.rotate.y, transform.rotate.z);
-              glMatrix.mat4.fromQuat(newMat, MyQuaternion);
-              glMatrix.mat4.multiply(modelMat, newMat, modelMat);
-        */
-        /*
-              var degY = transform.rotate.x;
-              var degX = transform.rotate.y;
-              var degZ = transform.rotate.z;
-        
-              glMatrix.quat.fromEuler(q, degY, degX, degZ);
-              */
-        gl_matrix_1.quat.fromEuler(q, dY * 180 / Math.PI, dX * 180 / Math.PI, 0);
-        gl_matrix_1.mat4.fromQuat(newrot, q);
-        gl_matrix_1.mat4.multiply(model, newrot, model);
-        inputParam.update(myMaterial, light);
+        gl.uniformMatrix4fv(gl.getUniformLocation(cubeShader.program, "lightSpaceMatrix"), false, lightSpaceMatrix);
         gl.uniformMatrix4fv(gl.getUniformLocation(cubeShader.program, "modelMat"), false, model);
         gl.uniformMatrix4fv(gl.getUniformLocation(cubeShader.program, "viewMat"), false, viewMat);
         gl.uniformMatrix4fv(gl.getUniformLocation(cubeShader.program, "projMat"), false, projMat);
@@ -264,7 +356,17 @@ const main = () => {
         myMaterial.shader.setUniform1f("material.shininess", myMaterial.shininess);
         myMaterial.shader.setUniform1f("material.diffuseStrength", inputParam.MaterialDiffuseStrength);
         myMaterial.shader.setUniform1f("material.specularStrength", inputParam.MaterialSpecularStrength);
+        gl.activeTexture(gl.TEXTURE0 + 3);
+        gl.bindTexture(gl.TEXTURE_2D, depthMap); // use the color attachment texture as the texture of the quad plane
+        cubeShader.setUniform1i("shadowMap", 3);
         gl.drawArrays(gl.TRIANGLES, 0, 36);
+        //floor
+        //floorShader.use();
+        gl.bindVertexArray(planeVAO);
+        //gl.bindTexture(GL_TEXTURE_2D, floorTexture);
+        gl.uniformMatrix4fv(gl.getUniformLocation(cubeShader.program, "modelMat"), false, modelFloor);
+        gl.drawArrays(gl.TRIANGLES, 0, 6);
+        gl.bindVertexArray(null);
         if (inputParam.isGrayScale) {
             // now bind back to default framebuffer and draw a quad plane with the attached framebuffer color texture
             gl.bindFramebuffer(gl.FRAMEBUFFER, null);
@@ -323,6 +425,12 @@ function LoadResources() {
         fragmentShaderSource = yield loadShaderFile("shader/fragmentShader.glsl");
         vertexTextureShaderSource = yield loadShaderFile("shader/vertexShader_texture.glsl");
         fragmentTextureShaderSource = yield loadShaderFile("shader/fragmentShader_texture.glsl");
+        vertexFloorShaderSource = yield loadShaderFile("shader/vertexShader_floor.glsl");
+        fragmentFloorShaderSource = yield loadShaderFile("shader/fragmentShader_floor.glsl");
+        vertexSimpleDepthShaderSource = yield loadShaderFile("shader/vertexShaderSimpleDepth.glsl");
+        fragmentSimpleDepthShaderSource = yield loadShaderFile("shader/fragmentShaderSimpleDepth.glsl");
+        vertexDebugDepthShaderSource = yield loadShaderFile("shader/vertexShaderDebugDepth.glsl");
+        fragmentDebugDepthShaderSource = yield loadShaderFile("shader/fragmentShaderDebugDepth.glsl");
         console.log("Vertex Shader:", vertexShaderSource);
         console.log("Fragment Shader:", fragmentShaderSource);
         loadImage("./image/container2.png", diffuseImage).then(img => {
@@ -338,6 +446,12 @@ var vertexShaderSource = "";
 var fragmentShaderSource = "";
 var vertexTextureShaderSource = "";
 var fragmentTextureShaderSource = "";
+var vertexFloorShaderSource = "";
+var fragmentFloorShaderSource = "";
+var vertexSimpleDepthShaderSource = "";
+var fragmentSimpleDepthShaderSource = "";
+var vertexDebugDepthShaderSource = "";
+var fragmentDebugDepthShaderSource = "";
 var diffuseImage = new Image();
 var specularImage = new Image();
 function loadTextureToGPU(gl, u_Sampler, image, texUnit) {

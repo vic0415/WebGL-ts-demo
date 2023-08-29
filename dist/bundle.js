@@ -10647,7 +10647,7 @@ class InputParam {
         this.MaterialSpecularStrength = 1;
         this.LightDirectionX = 1;
         this.LightDirectionY = 1;
-        this.isGrayScale = true;
+        this.isGrayScale = false;
         this.whiteColor = gl_matrix_1.vec3.fromValues(1.0, 1.0, 1.0);
     }
     update(material, light) {
@@ -10699,373 +10699,6 @@ class Material {
 exports.Material = Material;
 
 },{}],17:[function(require,module,exports){
-"use strict";
-Object.defineProperty(exports, "__esModule", { value: true });
-exports.rotate = exports.lookAt = exports.normalize = exports.cross = exports.Matrix4 = exports.Vector3 = void 0;
-class Vector3 {
-    constructor(x, y, z) {
-        this.x = x;
-        this.y = y;
-        this.z = z;
-    }
-    // 設置 x、y、z 值
-    setValues(x, y, z) {
-        this.x = x;
-        this.y = y;
-        this.z = z;
-    }
-    // 向量相加，回傳一個新的向量結果
-    add(vector) {
-        const resultX = this.x + vector.x;
-        const resultY = this.y + vector.y;
-        const resultZ = this.z + vector.z;
-        return new Vector3(resultX, resultY, resultZ);
-    }
-    // 向量相減，回傳一個新的向量結果
-    sub(vector) {
-        const resultX = this.x - vector.x;
-        const resultY = this.y - vector.y;
-        const resultZ = this.z - vector.z;
-        return new Vector3(resultX, resultY, resultZ);
-    }
-    mul(scalar) {
-        const resultX = this.x * scalar;
-        const resultY = this.y * scalar;
-        const resultZ = this.z * scalar;
-        return new Vector3(resultX, resultY, resultZ);
-    }
-    // 向量點積（內積），回傳一個數值結果
-    dot(vector) {
-        return this.x * vector.x + this.y * vector.y + this.z * vector.z;
-    }
-    // 向量叉積（外積），回傳一個新的向量結果
-    cross(vector) {
-        const resultX = this.y * vector.z - this.z * vector.y;
-        const resultY = this.z * vector.x - this.x * vector.z;
-        const resultZ = this.x * vector.y - this.y * vector.x;
-        return new Vector3(resultX, resultY, resultZ);
-    }
-    // 歸一化向量，回傳一個新的向量結果
-    normalize() {
-        const length = Math.sqrt(this.x * this.x + this.y * this.y + this.z * this.z);
-        const resultX = this.x / length;
-        const resultY = this.y / length;
-        const resultZ = this.z / length;
-        return new Vector3(resultX, resultY, resultZ);
-    }
-}
-exports.Vector3 = Vector3;
-class Matrix4 {
-    constructor() {
-        this.data = new Float32Array(16);
-        this.setIdentity();
-    }
-    set(src) {
-        var i, s, d;
-        s = src.data;
-        d = this.data;
-        if (s === d) {
-            return this;
-        }
-        for (i = 0; i < 16; ++i) {
-            d[i] = s[i];
-        }
-        return this;
-    }
-    ;
-    // 新增 setIdentity 方法，用於設置單位矩陣
-    setIdentity() {
-        this.data.fill(0);
-        this.data[0] = this.data[5] = this.data[10] = this.data[15] = 1;
-    }
-    // 新增 setPerspective 方法
-    setPerspective(fovy, aspectRatio, near, far) {
-        var e, rd, s, ct;
-        if (near === far || aspectRatio === 0) {
-            throw 'null frustum';
-        }
-        if (near <= 0) {
-            throw 'near <= 0';
-        }
-        if (far <= 0) {
-            throw 'far <= 0';
-        }
-        fovy = Math.PI * fovy / 180 / 2;
-        s = Math.sin(fovy);
-        if (s === 0) {
-            throw 'null frustum';
-        }
-        rd = 1 / (far - near);
-        ct = Math.cos(fovy) / s;
-        e = this.data;
-        e[0] = ct / aspectRatio;
-        e[1] = 0;
-        e[2] = 0;
-        e[3] = 0;
-        e[4] = 0;
-        e[5] = ct;
-        e[6] = 0;
-        e[7] = 0;
-        e[8] = 0;
-        e[9] = 0;
-        e[10] = -(far + near) * rd;
-        e[11] = -1;
-        e[12] = 0;
-        e[13] = 0;
-        e[14] = -2 * near * far * rd;
-        e[15] = 0;
-        return this;
-    }
-    // 設置矩陣元素的值
-    setValues(values) {
-        if (values.length !== 16) {
-            throw new Error("Invalid matrix dimensions. Matrix4 should be 4x4.");
-        }
-        this.data = values;
-    }
-    // 取得指定位置的元素值
-    getValue(row, col) {
-        if (row < 0 || row >= 4 || col < 0 || col >= 4) {
-            throw new Error("Invalid matrix index.");
-        }
-        return this.data[row + col * 4];
-    }
-    translate(x, y, z) {
-        var e = this.data;
-        e[12] += e[0] * x + e[4] * y + e[8] * z;
-        e[13] += e[1] * x + e[5] * y + e[9] * z;
-        e[14] += e[2] * x + e[6] * y + e[10] * z;
-        e[15] += e[3] * x + e[7] * y + e[11] * z;
-        return this;
-    }
-    ;
-    // 新增 rotate 方法
-    setRotate(angle, x, y, z) {
-        var e, s, c, len, rlen, nc, xy, yz, zx, xs, ys, zs;
-        angle = Math.PI * angle / 180;
-        e = this.data;
-        s = Math.sin(angle);
-        c = Math.cos(angle);
-        if (0 !== x && 0 === y && 0 === z) {
-            // Rotation around X axis
-            if (x < 0) {
-                s = -s;
-            }
-            e[0] = 1;
-            e[4] = 0;
-            e[8] = 0;
-            e[12] = 0;
-            e[1] = 0;
-            e[5] = c;
-            e[9] = -s;
-            e[13] = 0;
-            e[2] = 0;
-            e[6] = s;
-            e[10] = c;
-            e[14] = 0;
-            e[3] = 0;
-            e[7] = 0;
-            e[11] = 0;
-            e[15] = 1;
-        }
-        else if (0 === x && 0 !== y && 0 === z) {
-            // Rotation around Y axis
-            if (y < 0) {
-                s = -s;
-            }
-            e[0] = c;
-            e[4] = 0;
-            e[8] = s;
-            e[12] = 0;
-            e[1] = 0;
-            e[5] = 1;
-            e[9] = 0;
-            e[13] = 0;
-            e[2] = -s;
-            e[6] = 0;
-            e[10] = c;
-            e[14] = 0;
-            e[3] = 0;
-            e[7] = 0;
-            e[11] = 0;
-            e[15] = 1;
-        }
-        else if (0 === x && 0 === y && 0 !== z) {
-            // Rotation around Z axis
-            if (z < 0) {
-                s = -s;
-            }
-            e[0] = c;
-            e[4] = -s;
-            e[8] = 0;
-            e[12] = 0;
-            e[1] = s;
-            e[5] = c;
-            e[9] = 0;
-            e[13] = 0;
-            e[2] = 0;
-            e[6] = 0;
-            e[10] = 1;
-            e[14] = 0;
-            e[3] = 0;
-            e[7] = 0;
-            e[11] = 0;
-            e[15] = 1;
-        }
-        else {
-            // Rotation around another axis
-            len = Math.sqrt(x * x + y * y + z * z);
-            if (len !== 1) {
-                rlen = 1 / len;
-                x *= rlen;
-                y *= rlen;
-                z *= rlen;
-            }
-            nc = 1 - c;
-            xy = x * y;
-            yz = y * z;
-            zx = z * x;
-            xs = x * s;
-            ys = y * s;
-            zs = z * s;
-            e[0] = x * x * nc + c;
-            e[1] = xy * nc + zs;
-            e[2] = zx * nc - ys;
-            e[3] = 0;
-            e[4] = xy * nc - zs;
-            e[5] = y * y * nc + c;
-            e[6] = yz * nc + xs;
-            e[7] = 0;
-            e[8] = zx * nc + ys;
-            e[9] = yz * nc - xs;
-            e[10] = z * z * nc + c;
-            e[11] = 0;
-            e[12] = 0;
-            e[13] = 0;
-            e[14] = 0;
-            e[15] = 1;
-        }
-        return this;
-    }
-    setLookAt(eyeX, eyeY, eyeZ, centerX, centerY, centerZ, upX, upY, upZ) {
-        var e, fx, fy, fz, rlf, sx, sy, sz, rls, ux, uy, uz;
-        fx = centerX - eyeX;
-        fy = centerY - eyeY;
-        fz = centerZ - eyeZ;
-        // Normalize f.
-        rlf = 1 / Math.sqrt(fx * fx + fy * fy + fz * fz);
-        fx *= rlf;
-        fy *= rlf;
-        fz *= rlf;
-        // Calculate cross product of f and up.
-        sx = fy * upZ - fz * upY;
-        sy = fz * upX - fx * upZ;
-        sz = fx * upY - fy * upX;
-        // Normalize s.
-        rls = 1 / Math.sqrt(sx * sx + sy * sy + sz * sz);
-        sx *= rls;
-        sy *= rls;
-        sz *= rls;
-        // Calculate cross product of s and f.
-        ux = sy * fz - sz * fy;
-        uy = sz * fx - sx * fz;
-        uz = sx * fy - sy * fx;
-        // Set to this.
-        e = this.data;
-        e[0] = sx;
-        e[1] = ux;
-        e[2] = -fx;
-        e[3] = 0;
-        e[4] = sy;
-        e[5] = uy;
-        e[6] = -fy;
-        e[7] = 0;
-        e[8] = sz;
-        e[9] = uz;
-        e[10] = -fz;
-        e[11] = 0;
-        e[12] = 0;
-        e[13] = 0;
-        e[14] = 0;
-        e[15] = 1;
-        // Translate.
-        return this.translate(-eyeX, -eyeY, -eyeZ);
-    }
-    ;
-    concat(other) {
-        var i, e, a, b, ai0, ai1, ai2, ai3;
-        // Calculate e = a * b
-        e = this.data;
-        a = this.data;
-        b = other.data;
-        // If e equals b, copy b to temporary matrix.
-        if (e === b) {
-            b = new Float32Array(16);
-            for (i = 0; i < 16; ++i) {
-                b[i] = e[i];
-            }
-        }
-        for (i = 0; i < 4; i++) {
-            ai0 = a[i];
-            ai1 = a[i + 4];
-            ai2 = a[i + 8];
-            ai3 = a[i + 12];
-            e[i] = ai0 * b[0] + ai1 * b[1] + ai2 * b[2] + ai3 * b[3];
-            e[i + 4] = ai0 * b[4] + ai1 * b[5] + ai2 * b[6] + ai3 * b[7];
-            e[i + 8] = ai0 * b[8] + ai1 * b[9] + ai2 * b[10] + ai3 * b[11];
-            e[i + 12] = ai0 * b[12] + ai1 * b[13] + ai2 * b[14] + ai3 * b[15];
-        }
-        return this;
-    }
-    ;
-}
-exports.Matrix4 = Matrix4;
-function cross(vectorA, vectorB) {
-    return vectorA.cross(vectorB);
-}
-exports.cross = cross;
-function normalize(vector) {
-    return vector.normalize();
-}
-exports.normalize = normalize;
-function lookAt(eye, target, up) {
-    const matrix = new Matrix4();
-    /*
-      const zAxis = eye.sub(target).normalize();
-      const xAxis = up.cross(zAxis).normalize();
-      const yAxis = zAxis.cross(xAxis);
-    
-      matrix.setValues(new Float32Array([
-        xAxis.x, yAxis.x, zAxis.x, 0,
-        xAxis.y, yAxis.y, zAxis.y, 0,
-        xAxis.z, yAxis.z, zAxis.z, 0,
-        -xAxis.dot(eye), -yAxis.dot(eye), -zAxis.dot(eye), 1,
-      ]));
-    */
-    matrix.setLookAt(eye.x, eye.y, eye.z, target.x, target.y, target.z, up.x, up.y, up.z);
-    return matrix;
-}
-exports.lookAt = lookAt;
-function rotate(angle, x, y, z) {
-    const matrix = new Matrix4();
-    /*
-      const zAxis = eye.sub(target).normalize();
-      const xAxis = up.cross(zAxis).normalize();
-      const yAxis = zAxis.cross(xAxis);
-    
-      matrix.setValues(new Float32Array([
-        xAxis.x, yAxis.x, zAxis.x, 0,
-        xAxis.y, yAxis.y, zAxis.y, 0,
-        xAxis.z, yAxis.z, zAxis.z, 0,
-        -xAxis.dot(eye), -yAxis.dot(eye), -zAxis.dot(eye), 1,
-      ]));
-    */
-    matrix.setRotate(angle, x, y, z);
-    return matrix;
-}
-exports.rotate = rotate;
-
-},{}],18:[function(require,module,exports){
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.Shader = void 0;
@@ -11121,20 +10754,7 @@ class Shader {
 }
 exports.Shader = Shader;
 
-},{}],19:[function(require,module,exports){
-"use strict";
-Object.defineProperty(exports, "__esModule", { value: true });
-exports.Transform = void 0;
-const Math_1 = require("./Math");
-class Transform {
-    constructor() {
-        this.rotate = new Math_1.Vector3(0, 0, 0);
-    }
-    ;
-}
-exports.Transform = Transform;
-
-},{"./Math":17}],20:[function(require,module,exports){
+},{}],18:[function(require,module,exports){
 "use strict";
 var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
     function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
@@ -11153,7 +10773,6 @@ const Shader_1 = require("./Shader");
 const Camera_1 = require("./Camera");
 const LightDirectional_1 = require("./LightDirectional");
 const lil_gui_1 = __importDefault(require("lil-gui"));
-const Transform_1 = require("./Transform");
 const gl_matrix_1 = require("gl-matrix");
 const Material_1 = require("./Material");
 const InputParam_1 = require("./InputParam");
@@ -11204,42 +10823,47 @@ const main = () => {
     gl.enable(gl.DEPTH_TEST);
     //gl.enable(gl.CULL_FACE);
     const vertices = [
-        -0.5, -0.5, -0.5, 0.0, 0.0, 0.0, 0.0, -1.0,
-        0.5, -0.5, -0.5, 1.0, 0.0, 0.0, 0.0, -1.0,
-        0.5, 0.5, -0.5, 1.0, 1.0, 0.0, 0.0, -1.0,
-        0.5, 0.5, -0.5, 1.0, 1.0, 0.0, 0.0, -1.0,
-        -0.5, 0.5, -0.5, 0.0, 1.0, 0.0, 0.0, -1.0,
-        -0.5, -0.5, -0.5, 0.0, 0.0, 0.0, 0.0, -1.0,
-        -0.5, -0.5, 0.5, 0.0, 0.0, 0.0, 0.0, 1.0,
-        0.5, -0.5, 0.5, 1.0, 0.0, 0.0, 0.0, 1.0,
-        0.5, 0.5, 0.5, 1.0, 1.0, 0.0, 0.0, 1.0,
-        0.5, 0.5, 0.5, 1.0, 1.0, 0.0, 0.0, 1.0,
-        -0.5, 0.5, 0.5, 0.0, 1.0, 0.0, 0.0, 1.0,
-        -0.5, -0.5, 0.5, 0.0, 0.0, 0.0, 0.0, 1.0,
-        -0.5, 0.5, 0.5, 1.0, 0.0, -1.0, 0.0, 0.0,
-        -0.5, 0.5, -0.5, 1.0, 1.0, -1.0, 0.0, 0.0,
-        -0.5, -0.5, -0.5, 0.0, 1.0, -1.0, 0.0, 0.0,
-        -0.5, -0.5, -0.5, 0.0, 1.0, -1.0, 0.0, 0.0,
-        -0.5, -0.5, 0.5, 0.0, 0.0, -1.0, 0.0, 0.0,
-        -0.5, 0.5, 0.5, 1.0, 0.0, -1.0, 0.0, 0.0,
-        0.5, 0.5, 0.5, 1.0, 0.0, 1.0, 0.0, 0.0,
-        0.5, 0.5, -0.5, 1.0, 1.0, 1.0, 0.0, 0.0,
-        0.5, -0.5, -0.5, 0.0, 1.0, 1.0, 0.0, 0.0,
-        0.5, -0.5, -0.5, 0.0, 1.0, 1.0, 0.0, 0.0,
-        0.5, -0.5, 0.5, 0.0, 0.0, 1.0, 0.0, 0.0,
-        0.5, 0.5, 0.5, 1.0, 0.0, 1.0, 0.0, 0.0,
-        -0.5, -0.5, -0.5, 0.0, 1.0, 0.0, -1.0, 0.0,
-        0.5, -0.5, -0.5, 1.0, 1.0, 0.0, -1.0, 0.0,
-        0.5, -0.5, 0.5, 1.0, 0.0, 0.0, -1.0, 0.0,
-        0.5, -0.5, 0.5, 1.0, 0.0, 0.0, -1.0, 0.0,
-        -0.5, -0.5, 0.5, 0.0, 0.0, 0.0, -1.0, 0.0,
-        -0.5, -0.5, -0.5, 0.0, 1.0, 0.0, -1.0, 0.0,
-        -0.5, 0.5, -0.5, 0.0, 1.0, 0.0, 1.0, 0.0,
-        0.5, 0.5, -0.5, 1.0, 1.0, 0.0, 1.0, 0.0,
-        0.5, 0.5, 0.5, 1.0, 0.0, 0.0, 1.0, 0.0,
-        0.5, 0.5, 0.5, 1.0, 0.0, 0.0, 1.0, 0.0,
-        -0.5, 0.5, 0.5, 0.0, 0.0, 0.0, 1.0, 0.0,
-        -0.5, 0.5, -0.5, 0.0, 1.0, 0.0, 1.0, 0.0
+        -1.0, -1.0, -1.0, 0.0, 0.0, -1.0, 0.0, 0.0,
+        1.0, 1.0, -1.0, 0.0, 0.0, -1.0, 1.0, 1.0,
+        1.0, -1.0, -1.0, 0.0, 0.0, -1.0, 1.0, 0.0,
+        1.0, 1.0, -1.0, 0.0, 0.0, -1.0, 1.0, 1.0,
+        -1.0, -1.0, -1.0, 0.0, 0.0, -1.0, 0.0, 0.0,
+        -1.0, 1.0, -1.0, 0.0, 0.0, -1.0, 0.0, 1.0,
+        // front face
+        -1.0, -1.0, 1.0, 0.0, 0.0, 1.0, 0.0, 0.0,
+        1.0, -1.0, 1.0, 0.0, 0.0, 1.0, 1.0, 0.0,
+        1.0, 1.0, 1.0, 0.0, 0.0, 1.0, 1.0, 1.0,
+        1.0, 1.0, 1.0, 0.0, 0.0, 1.0, 1.0, 1.0,
+        -1.0, 1.0, 1.0, 0.0, 0.0, 1.0, 0.0, 1.0,
+        -1.0, -1.0, 1.0, 0.0, 0.0, 1.0, 0.0, 0.0,
+        // left face
+        -1.0, 1.0, 1.0, -1.0, 0.0, 0.0, 1.0, 0.0,
+        -1.0, 1.0, -1.0, -1.0, 0.0, 0.0, 1.0, 1.0,
+        -1.0, -1.0, -1.0, -1.0, 0.0, 0.0, 0.0, 1.0,
+        -1.0, -1.0, -1.0, -1.0, 0.0, 0.0, 0.0, 1.0,
+        -1.0, -1.0, 1.0, -1.0, 0.0, 0.0, 0.0, 0.0,
+        -1.0, 1.0, 1.0, -1.0, 0.0, 0.0, 1.0, 0.0,
+        // right face
+        1.0, 1.0, 1.0, 1.0, 0.0, 0.0, 1.0, 0.0,
+        1.0, -1.0, -1.0, 1.0, 0.0, 0.0, 0.0, 1.0,
+        1.0, 1.0, -1.0, 1.0, 0.0, 0.0, 1.0, 1.0,
+        1.0, -1.0, -1.0, 1.0, 0.0, 0.0, 0.0, 1.0,
+        1.0, 1.0, 1.0, 1.0, 0.0, 0.0, 1.0, 0.0,
+        1.0, -1.0, 1.0, 1.0, 0.0, 0.0, 0.0, 0.0,
+        // bottom face
+        -1.0, -1.0, -1.0, 0.0, -1.0, 0.0, 0.0, 1.0,
+        1.0, -1.0, -1.0, 0.0, -1.0, 0.0, 1.0, 1.0,
+        1.0, -1.0, 1.0, 0.0, -1.0, 0.0, 1.0, 0.0,
+        1.0, -1.0, 1.0, 0.0, -1.0, 0.0, 1.0, 0.0,
+        -1.0, -1.0, 1.0, 0.0, -1.0, 0.0, 0.0, 0.0,
+        -1.0, -1.0, -1.0, 0.0, -1.0, 0.0, 0.0, 1.0,
+        // top face
+        -1.0, 1.0, -1.0, 0.0, 1.0, 0.0, 0.0, 1.0,
+        1.0, 1.0, 1.0, 0.0, 1.0, 0.0, 1.0, 0.0,
+        1.0, 1.0, -1.0, 0.0, 1.0, 0.0, 1.0, 1.0,
+        1.0, 1.0, 1.0, 0.0, 1.0, 0.0, 1.0, 0.0,
+        -1.0, 1.0, -1.0, 0.0, 1.0, 0.0, 0.0, 1.0,
+        -1.0, 1.0, 1.0, 0.0, 1.0, 0.0, 0.0, 0.0 // bottom-left       
         /*
               // positions          // colors           // texture coords
               0.5,  0.5, 0.0,   1.0, 0.0, 0.0,   1.0, 1.0, // top right
@@ -11247,6 +10871,15 @@ const main = () => {
               -0.5, -0.5, 0.0,   0.0, 0.0, 1.0,   0.0, 0.0, // bottom left
               -0.5,  0.5, 0.0,   1.0, 1.0, 0.0,   0.0, 1.0,  // top left
         */
+    ];
+    const planeVertices = [
+        // positions            // normals         // texcoords
+        25.0, -0.5, 25.0, 0.0, 1.0, 0.0, 25.0, 0.0,
+        -25.0, -0.5, 25.0, 0.0, 1.0, 0.0, 0.0, 0.0,
+        -25.0, -0.5, -25.0, 0.0, 1.0, 0.0, 0.0, 25.0,
+        25.0, -0.5, 25.0, 0.0, 1.0, 0.0, 25.0, 0.0,
+        -25.0, -0.5, -25.0, 0.0, 1.0, 0.0, 0.0, 25.0,
+        25.0, -0.5, -25.0, 0.0, 1.0, 0.0, 25.0, 25.0
     ];
     const quadVertices = [
         // positions   // texCoords
@@ -11262,7 +10895,10 @@ const main = () => {
         1, 2, 3
     ];
     const quadShader = new Shader_1.Shader(gl, vertexTextureShaderSource, fragmentTextureShaderSource);
+    //const floorShader = new Shader(gl, vertexFloorShaderSource, fragmentFloorShaderSource);
     const cubeShader = new Shader_1.Shader(gl, vertexShaderSource, fragmentShaderSource);
+    const simpleDepthShader = new Shader_1.Shader(gl, vertexSimpleDepthShaderSource, fragmentSimpleDepthShaderSource);
+    const debugDepthShader = new Shader_1.Shader(gl, vertexDebugDepthShaderSource, fragmentDebugDepthShaderSource);
     cubeShader.use();
     var isImageLoaded = false;
     const myMaterial = new Material_1.Material(cubeShader, loadTextureToGPU(gl, gl.getUniformLocation(cubeShader.program, "material.diffuse"), diffuseImage, 0), loadTextureToGPU(gl, gl.getUniformLocation(cubeShader.program, "material.specular"), specularImage, 1), gl_matrix_1.vec3.fromValues(1.0, 1.0, 1.0), 8.0);
@@ -11271,14 +10907,28 @@ const main = () => {
     const cubeVBO = gl.createBuffer();
     gl.bindVertexArray(cubeVAO);
     gl.bindBuffer(gl.ARRAY_BUFFER, cubeVBO);
-    let vertexPosTypedArray = new Float32Array(vertices);
-    gl.bufferData(gl.ARRAY_BUFFER, vertexPosTypedArray, gl.STATIC_DRAW);
+    let cubeVerticeArray = new Float32Array(vertices);
+    gl.bufferData(gl.ARRAY_BUFFER, cubeVerticeArray, gl.STATIC_DRAW);
     gl.enableVertexAttribArray(0);
-    gl.vertexAttribPointer(gl.getAttribLocation(cubeShader.program, 'aPos'), 3, gl.FLOAT, false, vertexPosTypedArray.BYTES_PER_ELEMENT * 8, 0);
+    gl.vertexAttribPointer(gl.getAttribLocation(simpleDepthShader.program, 'aPos'), 3, gl.FLOAT, false, cubeVerticeArray.BYTES_PER_ELEMENT * 8, 0);
+    gl.vertexAttribPointer(gl.getAttribLocation(cubeShader.program, 'aPos'), 3, gl.FLOAT, false, cubeVerticeArray.BYTES_PER_ELEMENT * 8, 0);
     gl.enableVertexAttribArray(2);
-    gl.vertexAttribPointer(gl.getAttribLocation(cubeShader.program, 'aTexCoord'), 2, gl.FLOAT, false, vertexPosTypedArray.BYTES_PER_ELEMENT * 8, vertexPosTypedArray.BYTES_PER_ELEMENT * 3);
+    gl.vertexAttribPointer(gl.getAttribLocation(cubeShader.program, 'aTexCoord'), 2, gl.FLOAT, false, cubeVerticeArray.BYTES_PER_ELEMENT * 8, cubeVerticeArray.BYTES_PER_ELEMENT * 6);
     gl.enableVertexAttribArray(1);
-    gl.vertexAttribPointer(gl.getAttribLocation(cubeShader.program, 'aNormal'), 3, gl.FLOAT, false, vertexPosTypedArray.BYTES_PER_ELEMENT * 8, vertexPosTypedArray.BYTES_PER_ELEMENT * 5);
+    gl.vertexAttribPointer(gl.getAttribLocation(cubeShader.program, 'aNormal'), 3, gl.FLOAT, false, cubeVerticeArray.BYTES_PER_ELEMENT * 8, cubeVerticeArray.BYTES_PER_ELEMENT * 3);
+    const planeVAO = gl.createVertexArray();
+    const planeVBO = gl.createBuffer();
+    gl.bindVertexArray(planeVAO);
+    gl.bindBuffer(gl.ARRAY_BUFFER, planeVBO);
+    let planeVerticeArray = new Float32Array(planeVertices);
+    gl.bufferData(gl.ARRAY_BUFFER, planeVerticeArray, gl.STATIC_DRAW);
+    gl.enableVertexAttribArray(0);
+    gl.vertexAttribPointer(gl.getAttribLocation(simpleDepthShader.program, 'aPos'), 3, gl.FLOAT, false, planeVerticeArray.BYTES_PER_ELEMENT * 8, 0);
+    gl.vertexAttribPointer(gl.getAttribLocation(cubeShader.program, 'aPos'), 3, gl.FLOAT, false, planeVerticeArray.BYTES_PER_ELEMENT * 8, 0);
+    gl.enableVertexAttribArray(1);
+    gl.vertexAttribPointer(gl.getAttribLocation(cubeShader.program, 'aNormal'), 3, gl.FLOAT, false, planeVerticeArray.BYTES_PER_ELEMENT * 8, planeVerticeArray.BYTES_PER_ELEMENT * 3);
+    gl.enableVertexAttribArray(2);
+    gl.vertexAttribPointer(gl.getAttribLocation(cubeShader.program, 'aTexCoord'), 2, gl.FLOAT, false, planeVerticeArray.BYTES_PER_ELEMENT * 8, planeVerticeArray.BYTES_PER_ELEMENT * 6);
     const quadVAO = gl.createVertexArray();
     const quadVBO = gl.createBuffer();
     gl.bindVertexArray(quadVAO);
@@ -11286,9 +10936,9 @@ const main = () => {
     let quadVerticesArray = new Float32Array(quadVertices);
     gl.bufferData(gl.ARRAY_BUFFER, quadVerticesArray, gl.STATIC_DRAW);
     gl.enableVertexAttribArray(0);
-    gl.vertexAttribPointer(gl.getAttribLocation(quadShader.program, 'aPos'), 2, gl.FLOAT, false, quadVerticesArray.BYTES_PER_ELEMENT * 4, 0);
+    gl.vertexAttribPointer(gl.getAttribLocation(debugDepthShader.program, 'aPos'), 2, gl.FLOAT, false, quadVerticesArray.BYTES_PER_ELEMENT * 4, 0);
     gl.enableVertexAttribArray(1);
-    gl.vertexAttribPointer(gl.getAttribLocation(quadShader.program, 'aTexCoords'), 2, gl.FLOAT, false, quadVerticesArray.BYTES_PER_ELEMENT * 4, quadVerticesArray.BYTES_PER_ELEMENT * 2);
+    gl.vertexAttribPointer(gl.getAttribLocation(debugDepthShader.program, 'aTexCoords'), 2, gl.FLOAT, false, quadVerticesArray.BYTES_PER_ELEMENT * 4, quadVerticesArray.BYTES_PER_ELEMENT * 2);
     /*
     gl.vertexAttribPointer(gl.getAttribLocation(myShader.program, 'aPos'), 3, gl.FLOAT, false, vertexPosTypedArray.BYTES_PER_ELEMENT * 8, 0);
     gl.enableVertexAttribArray(0);
@@ -11301,16 +10951,8 @@ const main = () => {
     gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, indicesTypedArray, gl.STATIC_DRAW);
     */
     //ext?.bindVertexArrayOES(null);  
-    const transform = new Transform_1.Transform();
-    //transform.rotate = 0;
-    /*  const camera = new Camera(new GMath.Vector3(0, 0.5, 3.0), 0, 3.14, new GMath.Vector3(0, 1, 0));
-    
-      let viewMat = new GMath.Matrix4();*/
-    //let projMat = new GMath.Matrix4();
-    //modelMat.translate(0.5, 0, 0);
-    //projMat.setPerspective(60, 800.0/800.0, 0.001, 100.0);
-    const light = new LightDirectional_1.LightDirectional(gl_matrix_1.vec3.fromValues(8, 10, 0), gl_matrix_1.vec3.fromValues(0, 0, 0), gl_matrix_1.vec3.fromValues(1.0, 1.0, 1.0));
-    const camera = new Camera_1.Camera(gl_matrix_1.vec3.fromValues(0, 0.5, 3.0), 0, 3.14, gl_matrix_1.vec3.fromValues(0, 1, 0));
+    const light = new LightDirectional_1.LightDirectional(gl_matrix_1.vec3.fromValues(4, 2, 0), gl_matrix_1.vec3.fromValues(0, 0, 0), gl_matrix_1.vec3.fromValues(1.0, 1.0, 1.0));
+    const camera = new Camera_1.Camera(gl_matrix_1.vec3.fromValues(0, 0.5, 6.0), 0, 3.14, gl_matrix_1.vec3.fromValues(0, 1, 0));
     let trans = gl_matrix_1.mat4.create();
     let viewMat = gl_matrix_1.mat4.create();
     let projMat = gl_matrix_1.mat4.create();
@@ -11323,10 +10965,9 @@ const main = () => {
     var newrot = gl_matrix_1.mat4.create();
     var model = gl_matrix_1.mat4.create();
     let initRotQuat = gl_matrix_1.quat.create();
-    gl_matrix_1.quat.fromEuler(initRotQuat, 45, 45, 0);
+    gl_matrix_1.quat.fromEuler(initRotQuat, 0, 0, 0);
     gl_matrix_1.mat4.fromQuat(model, initRotQuat);
     // framebuffer configuration
-    // -------------------------
     const framebuffer = gl.createFramebuffer();
     gl.bindFramebuffer(gl.FRAMEBUFFER, framebuffer);
     // create a color attachment texture
@@ -11351,8 +10992,97 @@ const main = () => {
     if (gl.checkFramebufferStatus(gl.FRAMEBUFFER) != gl.FRAMEBUFFER_COMPLETE)
         console.error("ERROR::FRAMEBUFFER:: Framebuffer is not complete!");
     gl.bindFramebuffer(gl.FRAMEBUFFER, framebuffer);
+    // depth map
+    const depthMapFBO = gl.createFramebuffer();
+    gl.bindFramebuffer(gl.FRAMEBUFFER, depthMapFBO);
+    const SHADOW_WIDTH = 2048, SHADOW_HEIGHT = 2048;
+    gl.activeTexture(gl.TEXTURE0 + 3);
+    const depthMap = gl.createTexture();
+    gl.bindTexture(gl.TEXTURE_2D, depthMap);
+    gl.texImage2D(gl.TEXTURE_2D, 0, // level
+    gl.DEPTH_COMPONENT24, // internalFormat
+    SHADOW_WIDTH, SHADOW_HEIGHT, 0, // border
+    gl.DEPTH_COMPONENT, // format
+    gl.UNSIGNED_INT, // type
+    null);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.REPEAT);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.REPEAT);
+    gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.DEPTH_ATTACHMENT, // attachment
+    gl.TEXTURE_2D, depthMap, 0);
+    //gl.drawBuffers([gl.NONE]); // opengl: drawbuffer
+    //gl.readBuffer(gl.NONE);
+    gl.bindFramebuffer(gl.FRAMEBUFFER, null);
     const inputParam = new InputParam_1.InputParam();
+    let initRotQuatFloor = gl_matrix_1.quat.fromEuler(gl_matrix_1.quat.create(), 0, 0, 0);
+    let modelFloor = gl_matrix_1.mat4.fromQuat(gl_matrix_1.mat4.create(), initRotQuatFloor);
+    gl_matrix_1.mat4.translate(modelFloor, modelFloor, gl_matrix_1.vec3.fromValues(0, -0.5, 0));
+    //mat4.translate(model, model, vec3.fromValues(0, 0.5, 0));
+    // rended loop
     var tick = function () {
+        inputParam.update(myMaterial, light);
+        gl.bindFramebuffer(gl.FRAMEBUFFER, null);
+        gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
+        gl.clearColor(0.1, 0.6, 0.6, 1.0);
+        /*
+        let modelMat = glMatrix.mat4.create();
+  
+        let newMat = glMatrix.mat4.create();
+        let MyQuaternion = glMatrix.quat.fromEuler(glMatrix.quat.create(), transform.rotate.x, transform.rotate.y, transform.rotate.z);
+        glMatrix.mat4.fromQuat(newMat, MyQuaternion);
+        glMatrix.mat4.multiply(modelMat, newMat, modelMat);
+  */
+        /*
+              var degY = transform.rotate.x;
+              var degX = transform.rotate.y;
+              var degZ = transform.rotate.z;
+        
+              glMatrix.quat.fromEuler(q, degY, degX, degZ);
+              */
+        gl_matrix_1.quat.fromEuler(q, dY * 180 / Math.PI, dX * 180 / Math.PI, 0);
+        gl_matrix_1.mat4.fromQuat(newrot, q);
+        gl_matrix_1.mat4.multiply(model, newrot, model);
+        // depth map
+        let lightProjection = gl_matrix_1.mat4.create();
+        let lightView = gl_matrix_1.mat4.create();
+        let lightSpaceMatrix = gl_matrix_1.mat4.create();
+        let near_plane = 0.001, far_plane = 100;
+        gl_matrix_1.mat4.ortho(lightProjection, -10.0, 10.0, -10.0, 10.0, near_plane, far_plane);
+        lightView = gl_matrix_1.mat4.lookAt(lightView, light.position, gl_matrix_1.vec3.fromValues(0, 0, 0), gl_matrix_1.vec3.fromValues(0.0, 1.0, 0.0));
+        lightSpaceMatrix = gl_matrix_1.mat4.mul(lightSpaceMatrix, lightProjection, lightView);
+        simpleDepthShader.use();
+        gl.uniformMatrix4fv(gl.getUniformLocation(simpleDepthShader.program, "lightSpaceMatrix"), false, lightSpaceMatrix);
+        gl.enable(gl.DEPTH_TEST);
+        //gl.viewport(0, 0, gl.canvas.width, gl.canvas.height);
+        gl.viewport(0, 0, SHADOW_WIDTH, SHADOW_HEIGHT);
+        gl.bindFramebuffer(gl.FRAMEBUFFER, depthMapFBO);
+        gl.clear(gl.DEPTH_BUFFER_BIT);
+        gl.activeTexture(gl.TEXTURE0 + 3);
+        gl.bindTexture(gl.TEXTURE_2D, depthMap);
+        gl.bindVertexArray(cubeVAO);
+        gl.uniformMatrix4fv(gl.getUniformLocation(simpleDepthShader.program, "model"), false, model);
+        gl.enable(gl.CULL_FACE);
+        gl.cullFace(gl.FRONT);
+        gl.drawArrays(gl.TRIANGLES, 0, 36);
+        gl.bindVertexArray(planeVAO);
+        gl.uniformMatrix4fv(gl.getUniformLocation(simpleDepthShader.program, "model"), false, modelFloor);
+        gl.drawArrays(gl.TRIANGLES, 0, 6);
+        gl.disable(gl.CULL_FACE);
+        /*
+        //depth map debug
+        gl.bindFramebuffer(gl.FRAMEBUFFER, null);
+        gl.viewport(0, 0, gl.canvas.width, gl.canvas.height);
+  
+        gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
+  
+        debugDepthShader.use();
+        gl.bindVertexArray(quadVAO);
+        gl.activeTexture(gl.TEXTURE0 + 3);
+        gl.bindTexture(gl.TEXTURE_2D, depthMap);	// use the color attachment texture as the texture of the quad plane
+        debugDepthShader.setUniform1i("depthMap", 3);
+        gl.drawArrays(gl.TRIANGLES, 0, 6);
+  */
         gl.viewport(0, 0, gl.canvas.width, gl.canvas.height);
         if (inputParam.isGrayScale) {
             gl.bindFramebuffer(gl.FRAMEBUFFER, framebuffer);
@@ -11367,25 +11097,7 @@ const main = () => {
         gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
         gl.bindVertexArray(cubeVAO);
         cubeShader.use();
-        /*
-              let modelMat = glMatrix.mat4.create();
-        
-              let newMat = glMatrix.mat4.create();
-              let MyQuaternion = glMatrix.quat.fromEuler(glMatrix.quat.create(), transform.rotate.x, transform.rotate.y, transform.rotate.z);
-              glMatrix.mat4.fromQuat(newMat, MyQuaternion);
-              glMatrix.mat4.multiply(modelMat, newMat, modelMat);
-        */
-        /*
-              var degY = transform.rotate.x;
-              var degX = transform.rotate.y;
-              var degZ = transform.rotate.z;
-        
-              glMatrix.quat.fromEuler(q, degY, degX, degZ);
-              */
-        gl_matrix_1.quat.fromEuler(q, dY * 180 / Math.PI, dX * 180 / Math.PI, 0);
-        gl_matrix_1.mat4.fromQuat(newrot, q);
-        gl_matrix_1.mat4.multiply(model, newrot, model);
-        inputParam.update(myMaterial, light);
+        gl.uniformMatrix4fv(gl.getUniformLocation(cubeShader.program, "lightSpaceMatrix"), false, lightSpaceMatrix);
         gl.uniformMatrix4fv(gl.getUniformLocation(cubeShader.program, "modelMat"), false, model);
         gl.uniformMatrix4fv(gl.getUniformLocation(cubeShader.program, "viewMat"), false, viewMat);
         gl.uniformMatrix4fv(gl.getUniformLocation(cubeShader.program, "projMat"), false, projMat);
@@ -11401,7 +11113,17 @@ const main = () => {
         myMaterial.shader.setUniform1f("material.shininess", myMaterial.shininess);
         myMaterial.shader.setUniform1f("material.diffuseStrength", inputParam.MaterialDiffuseStrength);
         myMaterial.shader.setUniform1f("material.specularStrength", inputParam.MaterialSpecularStrength);
+        gl.activeTexture(gl.TEXTURE0 + 3);
+        gl.bindTexture(gl.TEXTURE_2D, depthMap); // use the color attachment texture as the texture of the quad plane
+        cubeShader.setUniform1i("shadowMap", 3);
         gl.drawArrays(gl.TRIANGLES, 0, 36);
+        //floor
+        //floorShader.use();
+        gl.bindVertexArray(planeVAO);
+        //gl.bindTexture(GL_TEXTURE_2D, floorTexture);
+        gl.uniformMatrix4fv(gl.getUniformLocation(cubeShader.program, "modelMat"), false, modelFloor);
+        gl.drawArrays(gl.TRIANGLES, 0, 6);
+        gl.bindVertexArray(null);
         if (inputParam.isGrayScale) {
             // now bind back to default framebuffer and draw a quad plane with the attached framebuffer color texture
             gl.bindFramebuffer(gl.FRAMEBUFFER, null);
@@ -11460,6 +11182,12 @@ function LoadResources() {
         fragmentShaderSource = yield loadShaderFile("shader/fragmentShader.glsl");
         vertexTextureShaderSource = yield loadShaderFile("shader/vertexShader_texture.glsl");
         fragmentTextureShaderSource = yield loadShaderFile("shader/fragmentShader_texture.glsl");
+        vertexFloorShaderSource = yield loadShaderFile("shader/vertexShader_floor.glsl");
+        fragmentFloorShaderSource = yield loadShaderFile("shader/fragmentShader_floor.glsl");
+        vertexSimpleDepthShaderSource = yield loadShaderFile("shader/vertexShaderSimpleDepth.glsl");
+        fragmentSimpleDepthShaderSource = yield loadShaderFile("shader/fragmentShaderSimpleDepth.glsl");
+        vertexDebugDepthShaderSource = yield loadShaderFile("shader/vertexShaderDebugDepth.glsl");
+        fragmentDebugDepthShaderSource = yield loadShaderFile("shader/fragmentShaderDebugDepth.glsl");
         console.log("Vertex Shader:", vertexShaderSource);
         console.log("Fragment Shader:", fragmentShaderSource);
         loadImage("./image/container2.png", diffuseImage).then(img => {
@@ -11475,6 +11203,12 @@ var vertexShaderSource = "";
 var fragmentShaderSource = "";
 var vertexTextureShaderSource = "";
 var fragmentTextureShaderSource = "";
+var vertexFloorShaderSource = "";
+var fragmentFloorShaderSource = "";
+var vertexSimpleDepthShaderSource = "";
+var fragmentSimpleDepthShaderSource = "";
+var vertexDebugDepthShaderSource = "";
+var fragmentDebugDepthShaderSource = "";
 var diffuseImage = new Image();
 var specularImage = new Image();
 function loadTextureToGPU(gl, u_Sampler, image, texUnit) {
@@ -11494,4 +11228,4 @@ function loadTextureToGPU(gl, u_Sampler, image, texUnit) {
 }
 window.onload = LoadResources;
 
-},{"./Camera":13,"./InputParam":14,"./LightDirectional":15,"./Material":16,"./Shader":18,"./Transform":19,"gl-matrix":2,"lil-gui":12}]},{},[20]);
+},{"./Camera":13,"./InputParam":14,"./LightDirectional":15,"./Material":16,"./Shader":17,"gl-matrix":2,"lil-gui":12}]},{},[18]);

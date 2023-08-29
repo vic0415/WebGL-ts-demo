@@ -4,6 +4,7 @@ precision highp float;
 in vec3 FragPos;
 in vec3 Normal;
 in vec2 TexCoord;
+in vec4 FragPosLightSpace;
 
 struct Material {
     vec3 ambient;
@@ -12,8 +13,9 @@ struct Material {
     float shininess;
     float diffuseStrength;
     float specularStrength;
-}; 
+};
 
+uniform sampler2D shadowMap;
 uniform Material material;
 //uniform sampler2D ourTexture;
 //uniform sampler2D ourFace;
@@ -28,6 +30,29 @@ uniform vec3 CameraPos;
 out vec4 FragColor;
 
 // texture samplers
+/*
+float max(float a, float b)
+{
+    return a > b ? a : b;
+}
+*/
+float ShadowCalculation(vec4 fragPosLightSpace)
+{
+    // 执行透视除法
+    vec3 projCoords = fragPosLightSpace.xyz / fragPosLightSpace.w;
+    // 变换到[0,1]的范围
+    projCoords = projCoords * 0.5 + 0.5;
+    // 取得最近点的深度(使用[0,1]范围下的fragPosLight当坐标)
+    float closestDepth = texture(shadowMap, projCoords.xy).r; 
+    // 取得当前片段在光源视角下的深度
+    float currentDepth = projCoords.z;
+    // 检查当前片段是否在阴影中
+    float bias = max(0.05 * (1.0 - dot(Normal, lightDir)), 0.0001);
+
+    float shadow = currentDepth - bias > closestDepth  ? 1.0 : 0.0;
+
+    return shadow;
+}
 
 void main() {
     //FragColor = vertexColor;
@@ -64,7 +89,12 @@ void main() {
     //vec3 diffuse = material.diffuse * 1.0 * lightColor;
 
     vec3 ambient = texture(material.diffuse, TexCoord).rgb * ambientColor * material.diffuseStrength;
-    FragColor = vec4((ambient + diffuse + specular) * objColor, 1.0);
+    //vec3 ambient = 0.15 * ambientColor;
+    // 计算阴影
+    float shadow = ShadowCalculation(FragPosLightSpace);       
+    FragColor = vec4((ambient + (1.0 - shadow) * (diffuse + specular)) * objColor, 1.0);
+
+    //FragColor = vec4((ambient + diffuse + specular) * objColor, 1.0);
 
     //FragColor = vec4(objColor, 1.0);
 
